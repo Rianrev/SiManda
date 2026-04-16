@@ -1,0 +1,146 @@
+<style>
+  details > summary { list-style: none; }
+  details > summary::-webkit-details-marker { display: none; }
+  details[open] .chevron { transform: rotate(180deg); }
+  .chevron { transition: transform 0.2s ease; }
+  details[open] > summary { background-color: rgba(255,255,255,0.08); }
+  .nav-link:hover { background-color: rgba(255,255,255,0.07); }
+  .nav-link.active { background-color: rgba(59,130,246,0.25); border-left: 3px solid #3b82f6; }
+</style>
+
+<nav class="py-4 px-2 flex flex-col gap-1 text-sm select-none">
+
+  <!-- Home -->
+  <a href="index.html"
+    class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white transition-colors duration-150 group">
+    <svg class="w-5 h-5 text-slate-400 group-hover:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+    </svg>
+    <span class="font-medium">Beranda</span>
+  </a>
+
+  <!-- Divider -->
+  <div class="my-2 border-t border-white/10"></div>
+  <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">Satuan Kerja</p>
+
+  <!-- MABES -->
+  <details class="group">
+    <summary class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white cursor-pointer transition-colors duration-150 list-none">
+      <svg class="w-5 h-5 text-slate-400 group-open:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+      </svg>
+      <span class="font-medium flex-1">Mabes</span>
+      <svg class="chevron w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </summary>
+    <ul class="mt-1 ml-8 flex flex-col gap-0.5">
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1MJwzAln7uoU6j4LjcAPzBMg8yyX2NGtV/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Settama" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Settama</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1NzoqHtGI0agpGQYS-NYjq0uylEmfczbV/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Ittama" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Ittama</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/130E7THypMYHcuO_-lJjV2iErhXEAEze7/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Deputi+Pemberantasan" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Deputi Pemberantasan</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1FpBGG1TzqdipKfTeejQKt3GsBBAqsN_o/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Deputi+Pencegahan" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Deputi Pencegahan</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1gsqbfA-30SarlzAPNGVgPZWeFpwK5dEi/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Deputi+Pemberdayaan" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Deputi Pemberdayaan</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1nKkbrq9QFuG1uRrP3RZpeISurOPx9-7F/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Deputi+Rehabilitasi" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Deputi Rehabilitasi</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/127junqm5hYd7_-bLAACXwDSHf9NDzxfb/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Deputi+Hukum" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Deputi Hukum & Kerja Sama</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1TYqS3_T-iKqIfqLsOwtl-w4-j3RdMn0R/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Pusdatin" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Pusdatin</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1DvdhAUQFmwWqfz7gBLR8aXGceOVQwgEC/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=PPSDM" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>PPSDM</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1___zhimyNumw45SMULnoDnEWdhYTIQvx/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Pusat+Laboratorium" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Pusat Laboratorium</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1nKkbrq9QFuG1uRrP3RZpeISurOPx9-7F/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Balai+Besar+Rehabilitasi" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Balai Besar Rehabilitasi</a></li>
+    </ul>
+  </details>
+
+  <!-- WIB -->
+  <details class="group">
+    <summary class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white cursor-pointer transition-colors duration-150 list-none">
+      <svg class="w-5 h-5 text-slate-400 group-open:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      <span class="font-medium flex-1">WIB</span>
+      <svg class="chevron w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </summary>
+    <ul class="mt-1 ml-8 flex flex-col gap-0.5">
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1vMDKp0PgUjsiZeAAVCoReVffbTi7Oxek/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Aceh" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Aceh</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1ZljkWgglaLgpjdnJTRn92fdp7_z_7JsL/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Sumatera+Utara" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Sumatera Utara</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/15lfXZpEgTlxEysqQHbqY7zp0GCo3SaYL/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Sumatera+Barat" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Sumatera Barat</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1G6kTjMil3nUg349JFThOTsqLwnxRTi7Y/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Riau" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Riau</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1I2SsmodP6ecGa7TwSx7ulra4VAmwglND/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Jambi" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Jambi</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1NMA9WU_dR8dF-uf1RlbxhIY8CJeMQ-4U/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Sumatera+Selatan" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Sumatera Selatan</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1y6lW06kQJQcPvGMygCaaztY3IEYbBZMH/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Lampung" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Lampung</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1_0oAhHOCnBbaWE5xOC6WfiNNfRmofCkG/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Bangka+Belitung" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Bangka Belitung</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1X2D2oJv2k2Q_zPy5u7G-jU5GJUpy9ICT/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Kepulauan+Riau" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Kepulauan Riau</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/12h01lnGPG8PosKnZPbhNeliiRa3BnJ27/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Bengkulu" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Bengkulu</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1NOXGXzWBlG8sZC3laqudx_Wr6egj9Fh3/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=DKI+Jakarta" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>DKI Jakarta</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1HLZLL-_gKSkWhZ-gNo2yfOdR1oxuqhMX/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Banten" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Banten</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1JVQKlrsV0ieogii7FeOhmtsdM0vpDGLZ/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Jawa+Barat" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Jawa Barat</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1e8KGy9-JnuWyPzTqAS-OoOSWx_Rr4cst/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Jawa+Tengah" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Jawa Tengah</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/13ov7h3UjTXBIMVaqiklbv3z9ARwXc0oS/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=DIY" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>DIY</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1-3Hk6la4cC3mzXE1hoQHmYJI0LICQQXn/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Jawa+Timur" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Jawa Timur</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/15ayZWCMvBNrh6W2RFqCyPYWYQLyJqyfj/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Kalimantan+Barat" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Kalimantan Barat</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1FqW4JeYZJ-n9CpiiY7jLjN8o-xdlMzF6/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Kalimantan+Tengah" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Kalimantan Tengah</a></li>
+    </ul>
+  </details>
+
+  <!-- WITA -->
+  <details class="group">
+    <summary class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white cursor-pointer transition-colors duration-150 list-none">
+      <svg class="w-5 h-5 text-slate-400 group-open:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      <span class="font-medium flex-1">WITA</span>
+      <svg class="chevron w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </summary>
+    <ul class="mt-1 ml-8 flex flex-col gap-0.5">
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1LB3Q6htvLZfPkTueE-QojK0mjOxssJ0W/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Kalimantan+Timur" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Kalimantan Timur</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1Shw9UIbKqUBz8Py7uneHxdl2kHDpnmWC/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Kalimantan+Selatan" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Kalimantan Selatan</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/12dPwYlmUO5sujYvTFlCVC_JVsVBfXMnJ/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Kalimantan+Utara" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Kalimantan Utara</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1jy_wyzPe3EP3T1Thlf5sRTD5T6eY2HrT/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Bali" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Bali</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1DRrU8VBqklznRcMQMeHfgQyNLf6Ni5pa/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=NTB" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>NTB</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1979fwz03vY3Xq18yUOpML4A4snob_598/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=NTT" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>NTT</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1xvP6WsrOy6Gez9-nj1SeI5-a62l479o5/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Sulawesi+Utara" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Sulawesi Utara</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1iwWuXr5S0muxI_H0unEejzAAEEujDPLz/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Sulawesi+Tengah" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Sulawesi Tengah</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1aFpHcfg12w5FQwF_zqRCkCwcjAu5lZh4/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Sulawesi+Selatan" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Sulawesi Selatan</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1hij9gi37cXN2I95URSwCbktBSXdVo48Q/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Sulawesi+Tenggara" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Sulawesi Tenggara</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1Lji_UWhEiaB6boWrYl8F4kfVz9HHDLlk/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Sulawesi+Barat" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Sulawesi Barat</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1LdSsNI5mmvC9OOVINksTQcy50Q3rhGHi/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Gorontalo" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Gorontalo</a></li>
+    </ul>
+  </details>
+
+  <!-- WIT -->
+  <details class="group">
+    <summary class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white cursor-pointer transition-colors duration-150 list-none">
+      <svg class="w-5 h-5 text-slate-400 group-open:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      <span class="font-medium flex-1">WIT</span>
+      <svg class="chevron w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </summary>
+    <ul class="mt-1 ml-8 flex flex-col gap-0.5">
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/15wF010UwUgrVF7C64VfQnJPWLHcBXpSS/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Maluku" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Maluku</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1iTReptrxS3YOqEJqroEInQSLAcUYw6o9/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Maluku+Utara" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Maluku Utara</a></li>
+      <li><a href="web-view.html?param1=https://docs.google.com/spreadsheets/d/1rAhReI89fqzLi_upR-j45REG9SiY-ZWd/edit?usp=drive_link&ouid=113647065457403246794&rtpof=true&sd=true&title=Papua" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>Papua</a></li>
+      <li><a href="dashboard.html?sheetId=15WuOWSH62x8kcTq_xs1sDP3yKu8UEKV3&title=Papua+Barat&sheetUrl=https://docs.google.com/spreadsheets/d/15WuOWSH62x8kcTq_xs1sDP3yKu8UEKV3/edit?usp=drive_link%26ouid=113647065457403246794%26rtpof=true%26sd=true" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-150"><span class="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"></span>Papua Barat ✦</a></li>
+    </ul>
+  </details>
+
+  <!-- Bottom info -->
+  <div class="mt-auto pt-4 border-t border-white/10 mx-2">
+    <div class="px-3 py-2 text-xs text-slate-500 text-center">
+      SI MANDA &copy; 2026 · BNN RI
+    </div>
+  </div>
+
+</nav>
