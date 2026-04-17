@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BNN - SI MANDA</title>
   <link rel="icon" href="assets/img/logo1.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -18,6 +19,10 @@
               800: '#1a3a5c',
               700: '#1e4d8c',
             }
+          },
+          fontFamily: {
+            headline: ['Manrope', 'sans-serif'],
+            body:     ['Inter',   'sans-serif'],
           }
         }
       }
@@ -32,7 +37,7 @@
   </style>
 </head>
 
-<body class="bg-slate-100 font-sans antialiased">
+<body class="bg-slate-100 font-body antialiased">
 
   <!-- ===== HEADER ===== -->
   <header class="fixed top-0 left-0 right-0 h-14 bg-navy-800 flex items-center px-4 z-50 shadow-lg">
@@ -49,10 +54,13 @@
       </div>
     </a>
     <div id="pageTitle" class="ml-6 px-3 py-1 bg-white/10 rounded-full text-white text-sm font-medium"></div>
-    <div class="ml-auto flex items-center gap-2">
-      <span class="text-white/40 text-xs">BNN RI</span>
-      <img src="assets/img/logo.png" class="h-8 w-8 object-contain opacity-80" alt="BNN" onerror="this.style.display='none'">
-    </div>
+    <button onclick="history.back()"
+      class="ml-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Kembali
+    </button>
   </header>
 
   <!-- ===== SIDEBAR ===== -->
@@ -92,6 +100,35 @@
   </main>
 
   <script>
+    function activateSidebarLink() {
+      const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+      const currentParams = new URLSearchParams(window.location.search);
+      const currentTitle = currentParams.get('title');
+      let best = null, fallback = null;
+      for (const a of document.querySelectorAll('#sidebar a')) {
+        try {
+          const u = new URL(a.href, window.location.href);
+          const aPage = u.pathname.split('/').pop();
+          if (aPage === currentPage) {
+            if (currentPage === 'web-view.html') {
+              if (u.searchParams.get('param1') === currentParams.get('param1')) { best = a; break; }
+            } else if (currentPage === 'dashboard-ananda.html') {
+              if (u.searchParams.get('sheetId') === currentParams.get('sheetId')) { best = a; break; }
+            } else { best = a; break; }
+          }
+          if (!fallback && currentTitle && u.searchParams.get('title') === currentTitle) {
+            fallback = a;
+          }
+        } catch(e) {}
+      }
+      const target = best || fallback;
+      if (target) {
+        target.classList.add('active');
+        const det = target.closest('details');
+        if (det) det.open = true;
+      }
+    }
+
     const toggleBtn = document.getElementById('toggleBtn');
     const sidebar   = document.getElementById('sidebar');
     const main      = document.getElementById('main');
@@ -107,7 +144,10 @@
     document.addEventListener('DOMContentLoaded', () => {
       fetch('sidebar.html')
         .then(r => r.text())
-        .then(html => { document.getElementById('sidebar').innerHTML = html; });
+        .then(html => {
+          document.getElementById('sidebar').innerHTML = html;
+          activateSidebarLink();
+        });
 
       const urlParams  = new URLSearchParams(window.location.search);
       const url        = urlParams.get('param1');

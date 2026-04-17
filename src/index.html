@@ -51,10 +51,6 @@
         <span class="text-blue-200 text-xs">Sistem Informasi Monitoring Data</span>
       </div>
     </a>
-    <div class="ml-auto flex items-center gap-2">
-      <span class="text-white/40 text-xs">BNN RI</span>
-      <img src="assets/img/logo.png" class="h-8 w-8 object-contain opacity-80" alt="BNN" onerror="this.style.display='none'">
-    </div>
   </header>
 
   <!-- ===== SIDEBAR ===== -->
@@ -92,6 +88,13 @@
         .then(r => r.text())
         .then(html => {
           document.getElementById('sidebar').innerHTML = html;
+          const page = window.location.pathname.split('/').pop() || 'index.html';
+          for (const a of document.querySelectorAll('#sidebar a')) {
+            try {
+              const u = new URL(a.href, window.location.href);
+              if (u.pathname.split('/').pop() === page) { a.classList.add('active'); break; }
+            } catch(e) {}
+          }
         });
     });
   </script>
