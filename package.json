@@ -2,16 +2,50 @@
   "name": "SiManda",
   "version": "1.0.0",
   "description": "SI MANDA - Sistem Informasi Monitoring Data BNN",
+  "author": "MKWS",
   "main": "main.js",
   "scripts": {
     "start": "electron-forge start",
     "dev": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "build": "electron-builder -w nsis"
   },
   "license": "ISC",
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1"
+  },
+  "build": {
+    "appId": "com.bnn.simanda",
+    "productName": "SI MANDA",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "assets/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.4.0",
@@ -24,6 +58,7 @@
     "@electron/fuses": "^1.8.0",
     "autoprefixer": "^10.4.19",
     "electron": "^30.1.0",
+    "electron-builder": "^26.8.1",
     "tailwindcss": "^4.2.2"
   }
 }
