@@ -88,6 +88,12 @@
         .then(r => r.text())
         .then(html => {
           document.getElementById('sidebar').innerHTML = html;
+          const all = document.querySelectorAll('#sidebar details');
+          all.forEach(det => {
+            det.addEventListener('toggle', () => {
+              if (det.open) all.forEach(other => { if (other !== det) other.open = false; });
+            });
+          });
           const page = window.location.pathname.split('/').pop() || 'index.html';
           for (const a of document.querySelectorAll('#sidebar a')) {
             try {

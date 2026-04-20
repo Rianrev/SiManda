@@ -246,8 +246,20 @@
   </main>
 
   <script>
+    // ============================================================
+    //  SIDEBAR
+    // ============================================================
+    function initSidebarAccordion() {
+      const all = document.querySelectorAll('#sidebar details');
+      all.forEach(det => {
+        det.addEventListener('toggle', () => {
+          if (det.open) all.forEach(other => { if (other !== det) other.open = false; });
+        });
+      });
+    }
+
     function activateSidebarLink() {
-      const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+      const currentPage   = window.location.pathname.split('/').pop() || 'index.html';
       const currentParams = new URLSearchParams(window.location.search);
       let best = null;
       for (const a of document.querySelectorAll('#sidebar a')) {
@@ -259,7 +271,7 @@
           } else if (currentPage === 'web-view.html') {
             if (u.searchParams.get('param1') === currentParams.get('param1')) { best = a; break; }
           } else { best = a; break; }
-        } catch(e) {}
+        } catch(_) {}
       }
       if (best) {
         best.classList.add('active');
@@ -268,37 +280,66 @@
       }
     }
 
-    // ---- Sidebar toggle ----
-    const toggleBtn = document.getElementById('toggleBtn');
-    const sidebar   = document.getElementById('sidebar');
-    const main      = document.getElementById('main');
-    let open = true;
-    toggleBtn.addEventListener('click', () => {
-      open = !open;
-      sidebar.classList.toggle('-translate-x-full', !open);
-      main.classList.toggle('ml-64', open);
-      main.classList.toggle('ml-0', !open);
-    });
-    fetch('sidebar.html').then(r => r.text()).then(html => {
-      document.getElementById('sidebar').innerHTML = html;
-      activateSidebarLink();
-    });
+    (() => {
+      const toggleBtn = document.getElementById('toggleBtn');
+      const sidebar   = document.getElementById('sidebar');
+      const main      = document.getElementById('main');
+      let open = true;
+      toggleBtn.addEventListener('click', () => {
+        open = !open;
+        sidebar.classList.toggle('-translate-x-full', !open);
+        main.classList.toggle('ml-64', open);
+        main.classList.toggle('ml-0', !open);
+      });
+      fetch('sidebar.html').then(r => r.text()).then(html => {
+        sidebar.innerHTML = html;
+        initSidebarAccordion();
+        activateSidebarLink();
+      });
+    })();
 
-    // ---- URL params ----
-    const params     = new URLSearchParams(window.location.search);
-    const sheetId    = params.get('sheetId');
-    const sheetTitle = params.get('title') || 'Dashboard';
-    const sheetUrl   = params.get('sheetUrl');
+    // ============================================================
+    //  DOM ELEMENT CACHE
+    // ============================================================
+    const el = {
+      pageTitle:        document.getElementById('pageTitle'),
+      breadcrumbTitle:  document.getElementById('breadcrumbTitle'),
+      btnOpenSheet:     document.getElementById('btnOpenSheet'),
+      searchInput:      document.getElementById('searchInput'),
+      fokusFilter:      document.getElementById('fokusFilter'),
+      loadingState:     document.getElementById('loadingState'),
+      errorState:       document.getElementById('errorState'),
+      dashboardContent: document.getElementById('dashboardContent'),
+      cardTotalSatker:  document.getElementById('cardTotalSatker'),
+      cardTargetOutput: document.getElementById('cardTargetOutput'),
+      cardAnggaran:     document.getElementById('cardAnggaran'),
+      cardRealisasiPct: document.getElementById('cardRealisasiPct'),
+      satkerTabel:      document.getElementById('satkerTabel'),
+      tableInfo:        document.getElementById('tableInfo'),
+      chartInner:       document.getElementById('chartInner'),
+      anggaranChart:    document.getElementById('anggaranChart'),
+    };
 
-    document.getElementById('pageTitle').textContent = 'Dashboard ' + sheetTitle;
-    document.getElementById('breadcrumbTitle').textContent = sheetTitle;
-    document.getElementById('btnOpenSheet').addEventListener('click', () => {
+    // ============================================================
+    //  URL PARAMS & PAGE TITLE
+    // ============================================================
+    const urlParams  = new URLSearchParams(window.location.search);
+    const sheetId    = urlParams.get('sheetId');
+    const sheetTitle = urlParams.get('title') || 'Dashboard';
+    const sheetUrl   = urlParams.get('sheetUrl');
+
+    el.pageTitle.textContent       = 'Dashboard ' + sheetTitle;
+    el.breadcrumbTitle.textContent = sheetTitle;
+    el.btnOpenSheet.addEventListener('click', () => {
       if (sheetUrl) {
-        window.location.href = 'web-view.html?param1=' + encodeURIComponent(sheetUrl) + '&title=' + encodeURIComponent(sheetTitle);
+        window.location.href = 'web-view.html?param1=' + encodeURIComponent(sheetUrl) +
+                               '&title=' + encodeURIComponent(sheetTitle);
       }
     });
 
-    // ---- Helpers ----
+    // ============================================================
+    //  FORMATTING & HTML HELPERS
+    // ============================================================
     function parseCSV(text) {
       const rows = [];
       for (const line of text.split('\n')) {
@@ -339,14 +380,20 @@
       return String(n);
     }
 
-    // ---- Parse satker-grouped data ----
+    function escapeHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ============================================================
+    //  DATA PARSING
+    // ============================================================
     function parseSatkerData(rows) {
-      // Find first row where col[0] is a positive integer (data start)
+      // Cari baris data pertama: col[0] integer positif,
+      // tapi bukan baris label angka kolom (col[1] juga integer).
       let dataStart = -1;
       for (let i = 0; i < rows.length; i++) {
         const r = rows[i];
         if (/^\d+$/.test((r[0] || '').trim()) && parseInt(r[0]) >= 1) {
-          // Skip baris header angka (misal "1,2,3,4,5,6,7") — col[1] juga angka
           if (/^\d+$/.test((r[1] || '').trim())) continue;
           dataStart = i; break;
         }
@@ -355,7 +402,6 @@
 
       const list = [];
       let cur = null;
-
       for (let i = dataStart; i < rows.length; i++) {
         const row  = rows[i];
         const noV  = (row[0] || '').trim();
@@ -379,13 +425,6 @@
       return list;
     }
 
-    // ---- State ----
-    let allSatker        = [];
-    let allFokusOptions  = [];
-    let selectedFokus    = '';
-    let chartInstance    = null;
-    const DEFAULT_FOKUS  = 'Penyebarluasan Informasi pencegahan pada kelompok anak dan remaja (8034)';
-
     function collectFokus(list) {
       const seen = new Set(), arr = [];
       for (const s of list) for (const f of s.fokusData) {
@@ -394,47 +433,44 @@
       return arr;
     }
 
-    function escapeHtml(s) {
-      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
+    // ============================================================
+    //  STATE
+    // ============================================================
     const ALL_FOKUS = '__all__';
+    let allSatker       = [];
+    let allFokusOptions = [];
+    let selectedFokus   = ALL_FOKUS;
+    let chartInstance   = null;
 
-    function populateFokusSelect() {
-      const sel = document.getElementById('fokusFilter');
-      const opts = [`<option value="${ALL_FOKUS}">Semua Fokus Prioritas</option>`]
-        .concat(allFokusOptions.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`));
-      sel.innerHTML = opts.join('');
-      const def = ALL_FOKUS;
-      selectedFokus = def;
-      sel.value = def;
+    // Ambil fokusData yang relevan dengan selectedFokus saat ini.
+    function relevantFokus(s) {
+      return selectedFokus === ALL_FOKUS
+        ? s.fokusData
+        : s.fokusData.filter(f => f.fokus === selectedFokus);
     }
 
-    // Expand satker list: per-fokus rows when ALL, one row per satker otherwise
+    // ============================================================
+    //  DATA PROJECTION
+    // ============================================================
+    // Baris tabel: per-fokus saat ALL_FOKUS, atau satu baris per-satker.
     function projectList() {
       if (selectedFokus === ALL_FOKUS) {
         const result = [];
         for (const s of allSatker) {
-          s.fokusData.forEach((f, fi) => {
-            result.push({
-              no:             s.no,
-              satker:         s.satker,
-              fokus:          f.fokus,
-              targetOutput:   f.targetOutput,
-              targetAnggaran: f.targetAnggaran,
-              realOutput:     f.realOutput,
-              realAnggaran:   f.realAnggaran,
-              hasData:        true,
-              isFirstFokus:   fi === 0,
-              fokusCount:     s.fokusData.length,
-            });
-          });
-          // Satker tanpa fokus data tetap muncul
           if (!s.fokusData.length) {
-            result.push({ no: s.no, satker: s.satker, fokus: '-', targetOutput: 0,
-              targetAnggaran: 0, realOutput: 0, realAnggaran: 0,
-              hasData: false, isFirstFokus: true, fokusCount: 1 });
+            result.push({
+              no: s.no, satker: s.satker, fokus: '-',
+              targetOutput: 0, targetAnggaran: 0, realOutput: 0, realAnggaran: 0,
+              hasData: false, isFirstFokus: true, fokusCount: 1,
+            });
+            continue;
           }
+          s.fokusData.forEach((f, fi) => result.push({
+            no: s.no, satker: s.satker, fokus: f.fokus,
+            targetOutput: f.targetOutput, targetAnggaran: f.targetAnggaran,
+            realOutput:   f.realOutput,   realAnggaran:   f.realAnggaran,
+            hasData: true, isFirstFokus: fi === 0, fokusCount: s.fokusData.length,
+          }));
         }
         return result;
       }
@@ -442,59 +478,67 @@
         const rows = s.fokusData.filter(f => f.fokus === selectedFokus);
         const sum  = key => rows.reduce((a, r) => a + r[key], 0);
         return {
-          no:             s.no,
-          satker:         s.satker,
-          fokus:          selectedFokus,
-          targetOutput:   sum('targetOutput'),
-          targetAnggaran: sum('targetAnggaran'),
-          realOutput:     sum('realOutput'),
-          realAnggaran:   sum('realAnggaran'),
-          hasData:        rows.length > 0,
-          isFirstFokus:   true,
-          fokusCount:     1,
+          no: s.no, satker: s.satker, fokus: selectedFokus,
+          targetOutput: sum('targetOutput'), targetAnggaran: sum('targetAnggaran'),
+          realOutput:   sum('realOutput'),   realAnggaran:   sum('realAnggaran'),
+          hasData: rows.length > 0, isFirstFokus: true, fokusCount: 1,
         };
       });
     }
 
-    // Aggregated list per-satker for chart (always one entry per satker)
+    // Data chart: selalu satu entri per-satker (agregasi fokus).
     function chartList(q) {
       return allSatker
         .filter(s => !q || s.satker.toLowerCase().includes(q))
         .map(s => {
-          const rows = selectedFokus === ALL_FOKUS
-            ? s.fokusData
-            : s.fokusData.filter(f => f.fokus === selectedFokus);
-          const sum = key => rows.reduce((a, r) => a + r[key], 0);
-          return { satker: s.satker, targetOutput: sum('targetOutput'),
-            targetAnggaran: sum('targetAnggaran'), realOutput: sum('realOutput'),
-            realAnggaran: sum('realAnggaran') };
+          const rows = relevantFokus(s);
+          const sum  = key => rows.reduce((a, r) => a + r[key], 0);
+          return {
+            satker: s.satker,
+            targetOutput: sum('targetOutput'), targetAnggaran: sum('targetAnggaran'),
+            realOutput:   sum('realOutput'),   realAnggaran:   sum('realAnggaran'),
+          };
         });
     }
 
+    // ============================================================
+    //  RENDERING
+    // ============================================================
+    function populateFokusSelect() {
+      const opts = [`<option value="${ALL_FOKUS}">Semua Fokus Prioritas</option>`]
+        .concat(allFokusOptions.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`));
+      el.fokusFilter.innerHTML = opts.join('');
+      selectedFokus = ALL_FOKUS;
+      el.fokusFilter.value = ALL_FOKUS;
+    }
+
     function updateMetrics(list) {
-      const satkerSet  = new Set(list.map(s => s.no));
-      const totalTarOut  = list.filter(s => s.isFirstFokus).reduce((a, s) => a + (selectedFokus === ALL_FOKUS ? allSatker.find(x=>x.no===s.no)?.fokusData.reduce((b,f)=>b+f.targetOutput,0)||0 : s.targetOutput), 0);
-      const totalTarAng  = list.filter(s => s.isFirstFokus).reduce((a, s) => a + (selectedFokus === ALL_FOKUS ? allSatker.find(x=>x.no===s.no)?.fokusData.reduce((b,f)=>b+f.targetAnggaran,0)||0 : s.targetAnggaran), 0);
-      const totalRealOut = list.reduce((a, s) => a + s.realOutput, 0);
-      const avgPct = totalTarOut > 0 ? Math.round((totalRealOut / totalTarOut) * 100) : 0;
-      document.getElementById('cardTotalSatker').textContent  = satkerSet.size;
-      document.getElementById('cardTargetOutput').textContent = totalTarOut || '-';
-      document.getElementById('cardAnggaran').textContent     = fmtRupiah(totalTarAng);
-      document.getElementById('cardRealisasiPct').textContent = avgPct + '%';
+      const satkerNos = new Set(list.map(s => s.no));
+      let tarOut = 0, tarAng = 0, realOut = 0;
+      for (const s of allSatker) {
+        if (!satkerNos.has(s.no)) continue;
+        for (const f of relevantFokus(s)) {
+          tarOut  += f.targetOutput;
+          tarAng  += f.targetAnggaran;
+          realOut += f.realOutput;
+        }
+      }
+      const pct = tarOut > 0 ? Math.round((realOut / tarOut) * 100) : 0;
+      el.cardTotalSatker.textContent  = satkerNos.size;
+      el.cardTargetOutput.textContent = tarOut || '-';
+      el.cardAnggaran.textContent     = fmtRupiah(tarAng);
+      el.cardRealisasiPct.textContent = pct + '%';
     }
 
     function renderTable(list) {
-      const tbody = document.getElementById('satkerTabel');
-      const info  = document.getElementById('tableInfo');
       if (!list.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-on-variant text-sm">Tidak ada data</td></tr>`;
-        info.textContent = 'Menampilkan 0 satker';
+        el.satkerTabel.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-on-variant text-sm">Tidak ada data</td></tr>`;
+        el.tableInfo.textContent = 'Menampilkan 0 satker';
         return;
       }
 
-      // Track satker group index for zebra striping
       let groupIdx = -1, lastNo = null;
-      tbody.innerHTML = list.map(s => {
+      el.satkerTabel.innerHTML = list.map(s => {
         if (s.no !== lastNo) { groupIdx++; lastNo = s.no; }
         const zebra   = groupIdx % 2 === 1 ? 'bg-slate-50/60' : '';
         const realOut = s.realOutput   ? `<span class="text-secondary font-semibold">${s.realOutput}</span>`  : `<span class="text-slate-300">-</span>`;
@@ -503,12 +547,12 @@
         const tarAng  = s.targetAnggaran ? fmtRupiah(s.targetAnggaran) : '-';
         const fokus   = s.hasData ? escapeHtml(s.fokus) : `<span class="text-slate-300 italic">tidak tersedia</span>`;
 
-        const rowspan = s.fokusCount > 1 ? ` rowspan="${s.fokusCount}"` : '';
+        const rowspan    = s.fokusCount > 1 ? ` rowspan="${s.fokusCount}"` : '';
+        const borderTop  = s.isFirstFokus ? 'border-t border-slate-200' : '';
         const groupCells = s.isFirstFokus
           ? `<td class="px-6 py-4 text-on-variant align-top border-t border-slate-200"${rowspan}>${s.no}</td>
              <td class="px-6 py-4 font-medium text-on-surface align-top border-t border-slate-200"${rowspan}>${escapeHtml(s.satker || '-')}</td>`
           : '';
-        const borderTop = s.isFirstFokus ? 'border-t border-slate-200' : '';
 
         return `<tr class="${zebra} hover:bg-surface-low/50 transition-colors">
           ${groupCells}
@@ -521,67 +565,45 @@
       }).join('');
 
       const satkerCount = new Set(list.map(s => s.no)).size;
-      info.textContent = `Menampilkan ${satkerCount} satker` +
+      el.tableInfo.textContent = `Menampilkan ${satkerCount} satker` +
         (selectedFokus === ALL_FOKUS ? `, ${list.length} baris fokus` : '') +
         ` dari ${allSatker.length} total satker`;
     }
 
-    function applyFilters() {
-      const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-      const projected = projectList();
-      const filtered  = !q ? projected : projected.filter(s => s.satker.toLowerCase().includes(q));
-      renderTable(filtered);
-      updateMetrics(filtered);
-      buildChart(chartList(q));
-    }
-
-    document.getElementById('searchInput').addEventListener('input', applyFilters);
-    document.getElementById('fokusFilter').addEventListener('change', e => {
-      selectedFokus = e.target.value;
-      applyFilters();
-    });
-
-    // ---- Build bar chart ----
     function buildChart(list) {
       const labels   = list.map(s => s.satker.replace(/^BNNP?\s*/i, '').replace(/^BNNK?\s*/i, ''));
-      const tarData  = list.map(s => s.targetAnggaran);
-      const realData = list.map(s => s.realAnggaran);
+      const tarAng   = list.map(s => s.targetAnggaran);
+      const realAng  = list.map(s => s.realAnggaran);
 
-      // If all anggaran zero, fall back to output
-      const useOutput = tarData.every(v => !v) && realData.every(v => !v);
-      const tData = useOutput ? list.map(s => s.targetOutput)  : tarData;
-      const rData = useOutput ? list.map(s => s.realOutput)    : realData;
-      const fmtTip = useOutput ? v => `${v} output` : v => fmtRupiahShort(v);
+      // Fallback ke output kalau anggaran semua nol
+      const useOutput = tarAng.every(v => !v) && realAng.every(v => !v);
+      const tData     = useOutput ? list.map(s => s.targetOutput) : tarAng;
+      const rData     = useOutput ? list.map(s => s.realOutput)   : realAng;
+      const fmtTip    = useOutput ? v => `${v} output` : v => fmtRupiahShort(v);
 
-      // Adjust chart width based on number of satkers
       const minPxPerBar = 60;
-      document.getElementById('chartInner').style.minWidth =
-        Math.max(600, list.length * minPxPerBar * 2 + 100) + 'px';
+      el.chartInner.style.minWidth = Math.max(600, list.length * minPxPerBar * 2 + 100) + 'px';
 
       if (chartInstance) chartInstance.destroy();
-      chartInstance = new Chart(document.getElementById('anggaranChart'), {
+      chartInstance = new Chart(el.anggaranChart, {
         type: 'bar',
         data: {
           labels,
           datasets: [
-            { label: useOutput ? 'Target Output' : 'Target Anggaran',    data: tData, backgroundColor: '#cbd5e1', borderRadius: 5, barThickness: minPxPerBar - 12 },
-            { label: useOutput ? 'Realisasi Output' : 'Realisasi Anggaran', data: rData, backgroundColor: '#4f46e5', borderRadius: 5, barThickness: minPxPerBar - 12 }
-          ]
+            { label: useOutput ? 'Target Output'    : 'Target Anggaran',    data: tData, backgroundColor: '#cbd5e1', borderRadius: 5, barThickness: minPxPerBar - 12 },
+            { label: useOutput ? 'Realisasi Output' : 'Realisasi Anggaran', data: rData, backgroundColor: '#4f46e5', borderRadius: 5, barThickness: minPxPerBar - 12 },
+          ],
         },
         options: {
           layout: { padding: { top: 24 } },
           plugins: {
             legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: ctx => ` ${ctx.dataset.label}: ${fmtTip(ctx.raw)}`
-              }
-            }
+            tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtTip(ctx.raw)}` } },
           },
           scales: {
             y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { color: '#64748b', callback: v => useOutput ? v : fmtRupiahShort(v) } },
-            x: { grid: { display: false }, ticks: { color: '#64748b', maxRotation: 35, minRotation: 20 } }
-          }
+            x: { grid: { display: false }, ticks: { color: '#64748b', maxRotation: 35, minRotation: 20 } },
+          },
         },
         plugins: [{
           id: 'barLabel',
@@ -598,20 +620,40 @@
                 ctx.restore();
               });
             });
-          }
-        }]
+          },
+        }],
       });
     }
 
-    // ---- Main loader ----
-    async function loadDashboard() {
-      if (!sheetId) {
-        document.getElementById('loadingState').classList.add('hidden');
-        const e = document.getElementById('errorState');
-        e.classList.remove('hidden'); e.classList.add('flex');
-        return;
-      }
+    // ============================================================
+    //  FILTER / EVENTS
+    // ============================================================
+    function applyFilters() {
+      const q         = (el.searchInput.value || '').toLowerCase().trim();
+      const projected = projectList();
+      const filtered  = !q ? projected : projected.filter(s => s.satker.toLowerCase().includes(q));
+      renderTable(filtered);
+      updateMetrics(filtered);
+      buildChart(chartList(q));
+    }
 
+    el.searchInput.addEventListener('input', applyFilters);
+    el.fokusFilter.addEventListener('change', e => {
+      selectedFokus = e.target.value;
+      applyFilters();
+    });
+
+    // ============================================================
+    //  BOOTSTRAP
+    // ============================================================
+    function showError() {
+      el.loadingState.classList.add('hidden');
+      el.errorState.classList.remove('hidden');
+      el.errorState.classList.add('flex');
+    }
+
+    async function loadDashboard() {
+      if (!sheetId) return showError();
       try {
         const res = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`);
         if (!res.ok) throw new Error('fetch failed');
@@ -619,16 +661,13 @@
         allSatker       = parseSatkerData(rows);
         allFokusOptions = collectFokus(allSatker);
 
-        document.getElementById('loadingState').classList.add('hidden');
-        document.getElementById('dashboardContent').classList.remove('hidden');
+        el.loadingState.classList.add('hidden');
+        el.dashboardContent.classList.remove('hidden');
 
         populateFokusSelect();
         applyFilters();
-
-      } catch (e) {
-        document.getElementById('loadingState').classList.add('hidden');
-        const el = document.getElementById('errorState');
-        el.classList.remove('hidden'); el.classList.add('flex');
+      } catch (_) {
+        showError();
       }
     }
 
