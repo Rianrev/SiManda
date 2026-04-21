@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BNN - SI MANDA</title>
   <link rel="icon" href="assets/img/logo1.ico">
+  <script src="auth.js"></script>
+  <script>if (!getSession()) window.location.replace('login.html');</script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -61,6 +63,17 @@
       </svg>
       Kembali
     </button>
+    <div class="ml-auto flex items-center gap-2">
+      <span id="userBadge" class="px-2.5 py-1 bg-white/10 rounded-full text-white text-xs font-medium"></span>
+      <button onclick="authLogout()"
+        class="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-red-500/30 text-white text-xs rounded-lg transition">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+        Keluar
+      </button>
+    </div>
   </header>
 
   <!-- ===== SIDEBAR ===== -->
@@ -100,6 +113,9 @@
   </main>
 
   <script>
+    const session = getSession();
+    document.getElementById('userBadge').textContent = session.region === '*' ? 'Master' : session.region;
+
     function initSidebarAccordion() {
       const all = document.querySelectorAll('#sidebar details');
       all.forEach(det => {
@@ -112,7 +128,6 @@
     function activateSidebarLink() {
       const currentPage = window.location.pathname.split('/').pop() || 'index.html';
       const currentParams = new URLSearchParams(window.location.search);
-      const currentTitle = currentParams.get('title');
       let best = null, fallback = null;
       for (const a of document.querySelectorAll('#sidebar a')) {
         try {
@@ -125,7 +140,7 @@
               if (u.searchParams.get('sheetId') === currentParams.get('sheetId')) { best = a; break; }
             } else { best = a; break; }
           }
-          if (!fallback && currentTitle && u.searchParams.get('title') === currentTitle) {
+          if (!fallback && currentParams.get('title') && u.searchParams.get('title') === currentParams.get('title')) {
             fallback = a;
           }
         } catch(e) {}
@@ -155,6 +170,7 @@
         .then(r => r.text())
         .then(html => {
           document.getElementById('sidebar').innerHTML = html;
+          filterSidebar();
           initSidebarAccordion();
           activateSidebarLink();
         });
@@ -162,6 +178,13 @@
       const urlParams  = new URLSearchParams(window.location.search);
       const url        = urlParams.get('param1');
       const title      = urlParams.get('title') || '';
+
+      // Access control: regional user can only view their own region
+      if (session.region !== '*' && title && title !== session.region) {
+        window.location.replace('index.html');
+        return;
+      }
+
       const webView    = document.getElementById('myWebView');
       const loading    = document.getElementById('loadingState');
       const errorState = document.getElementById('errorState');
@@ -180,12 +203,18 @@
 
         webView.addEventListener('did-finish-load', () => {
           loading.classList.add('hidden');
+          errorState.classList.add('hidden');
+          errorState.classList.remove('flex');
           webView.classList.remove('hidden');
           webView.classList.add('flex');
         });
 
-        webView.addEventListener('did-fail-load', () => {
+        webView.addEventListener('did-fail-load', (e) => {
+          if (!e.isMainFrame) return;
+          if (e.errorCode === -3) return;
           loading.classList.add('hidden');
+          webView.classList.add('hidden');
+          webView.classList.remove('flex');
           errorState.classList.remove('hidden');
           errorState.classList.add('flex');
         });

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BNN - SI MANDA · Login</title>
+  <link rel="icon" href="assets/img/logo1.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              950: '#0a1929',
+              900: '#0f2744',
+              800: '#1a3a5c',
+              700: '#1e4d8c',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <script src="auth.js"></script>
+  <script>if (getSession()) window.location.replace('index.html');</script>
+</head>
+
+<body class="min-h-screen bg-navy-950 flex items-center justify-center p-4">
+
+  <div class="w-full max-w-sm">
+    <!-- Logo & Title -->
+    <div class="flex flex-col items-center mb-8 gap-4">
+      <img src="assets/img/logo1.jpeg" class="h-20 w-20 rounded-full ring-4 ring-white/20 object-cover shadow-xl" alt="Logo BNN">
+      <div class="text-center">
+        <h1 class="text-white text-2xl font-bold tracking-wide">SI MANDA</h1>
+        <p class="text-blue-300 text-sm mt-0.5">Sistem Informasi Monitoring Data</p>
+        <p class="text-slate-500 text-xs mt-1">Badan Narkotika Nasional RI</p>
+      </div>
+    </div>
+
+    <!-- Login Card -->
+    <div class="bg-navy-900 rounded-2xl p-7 shadow-2xl border border-white/5">
+      <h2 class="text-white font-semibold text-base mb-5 text-center">Masuk ke Akun Anda</h2>
+
+      <form id="loginForm" class="flex flex-col gap-4" autocomplete="off">
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Username</label>
+          <input id="username" type="text" placeholder="Contoh: bnnpaceh.4bnn" autocomplete="username"
+            class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-600 text-sm
+                   focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition">
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Password</label>
+          <div class="relative">
+            <input id="password" type="password" placeholder="Masukkan password" autocomplete="current-password"
+              class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-600 text-sm
+                     focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition pr-10">
+            <button type="button" id="togglePwd"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition">
+              <svg id="eyeIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="errorMsg"
+          class="hidden items-center gap-2 text-red-400 text-xs bg-red-500/10 py-2.5 px-3 rounded-lg border border-red-500/20">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          </svg>
+          Username atau password salah.
+        </div>
+
+        <button type="submit" id="submitBtn"
+          class="w-full mt-1 py-2.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold
+                 rounded-lg transition text-sm flex items-center justify-center gap-2">
+          <span id="btnText">Masuk</span>
+          <svg id="btnSpinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+          </svg>
+        </button>
+
+      </form>
+    </div>
+
+    <p class="text-slate-600 text-xs text-center mt-6">SI MANDA &copy; 2026 &middot; BNN RI</p>
+  </div>
+
+  <script>
+    const form       = document.getElementById('loginForm');
+    const errorMsg   = document.getElementById('errorMsg');
+    const pwdInput   = document.getElementById('password');
+    const togglePwd  = document.getElementById('togglePwd');
+    const btnText    = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const submitBtn  = document.getElementById('submitBtn');
+
+    togglePwd.addEventListener('click', () => {
+      const isPassword = pwdInput.type === 'password';
+      pwdInput.type = isPassword ? 'text' : 'password';
+      document.getElementById('eyeIcon').innerHTML = isPassword
+        ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>'
+        : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+    });
+
+    ['username', 'password'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => {
+        errorMsg.classList.add('hidden');
+        errorMsg.classList.remove('flex');
+      });
+    });
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = pwdInput.value;
+
+      submitBtn.disabled = true;
+      btnText.textContent = 'Memproses...';
+      btnSpinner.classList.remove('hidden');
+
+      setTimeout(() => {
+        const session = authLogin(username, password);
+        if (session) {
+          localStorage.setItem('simanda_session', JSON.stringify(session));
+          window.location.replace('index.html');
+        } else {
+          errorMsg.classList.remove('hidden');
+          errorMsg.classList.add('flex');
+          pwdInput.value = '';
+          pwdInput.focus();
+          submitBtn.disabled = false;
+          btnText.textContent = 'Masuk';
+          btnSpinner.classList.add('hidden');
+        }
+      }, 300);
+    });
+
+    document.getElementById('username').focus();
+  </script>
+
+</body>
+</html>

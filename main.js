@@ -15,26 +15,11 @@ const createWindow = () => {
     
     Menu.setApplicationMenu(mainMenu)
 
-    win.loadFile('./src/index.html')
+    win.loadFile('./src/login.html')
 }
 
 
 app.whenReady().then(() => {
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Content-Security-Policy': [
-          "default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; " +
-          "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.tailwindcss.com; " +
-          "img-src 'self' data: https:; " +
-          "connect-src 'self' https://docs.google.com https://*.googleusercontent.com; " +
-          "frame-src https://docs.google.com https://accounts.google.com;"
-        ]
-      }
-    })
-  })
-
   createWindow()
 
   app.on('activate', () => {
