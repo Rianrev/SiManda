@@ -9,7 +9,10 @@
     "dev": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
-    "build": "electron-builder -w nsis"
+    "build": "node scripts/build-dist.js",
+    "build:installer": "node scripts/build-dist.js --target installer",
+    "build:portable": "node scripts/build-dist.js --target portable",
+    "build:css": "node_modules/.bin/tailwindcss -i src/assets/css/input.css -o src/assets/css/tailwind.min.css --minify"
   },
   "license": "ISC",
   "dependencies": {
@@ -25,6 +28,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "menumaker.js",
       "src/**/*",
       "assets/**/*",
       "node_modules/**/*",
@@ -44,7 +48,8 @@
             "x64"
           ]
         }
-      ]
+      ],
+      "icon": "assets/icon.ico"
     }
   },
   "devDependencies": {
@@ -56,9 +61,12 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
     "@electron-forge/plugin-fuses": "^7.4.0",
     "@electron/fuses": "^1.8.0",
+    "@tailwindcss/cli": "^4.2.4",
     "autoprefixer": "^10.4.19",
     "electron": "^30.1.0",
     "electron-builder": "^26.8.1",
-    "tailwindcss": "^4.2.2"
+    "jimp": "^1.6.1",
+    "png-to-ico": "^3.0.1",
+    "tailwindcss": "^4.2.4"
   }
 }

@@ -10,7 +10,7 @@ const createWindow = () => {
         preload: path.join(__dirname, 'preload.js'),
         webviewTag : true
       },
-      icon:'./src/assets/img/logo1.png'
+      icon: path.join(__dirname, 'src/assets/img/logo1.ico')
     })
     
     Menu.setApplicationMenu(mainMenu)

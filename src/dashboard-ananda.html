@@ -10,41 +10,12 @@
   <script>if (!getSession()) window.location.replace('login.html');</script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
+  
   <script src="assets/vendor/chart.js/chart.umd.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy: { 950: '#0a1929', 900: '#0f2744', 800: '#1a3a5c', 700: '#1e4d8c' },
-            'surface':         '#f7f9fb',
-            'surface-lowest':  '#ffffff',
-            'surface-low':     '#f2f4f6',
-            'surface-high':    '#e6e8ea',
-            'on-surface':      '#191c1e',
-            'on-variant':      '#45464d',
-            'primary-fixed':   '#dae2fd',
-            'primary-cnt':     '#131b2e',
-            'secondary':       '#712edd',
-            'secondary-fixed': '#ebddff',
-          },
-          fontFamily: {
-            headline: ['Manrope', 'sans-serif'],
-            body:     ['Inter',   'sans-serif'],
-          }
-        }
-      }
-    }
-  </script>
-  <style type="text/tailwindcss">
-    @layer utilities {
-      .scrollbar-thin::-webkit-scrollbar { width: 4px; }
-      .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-      .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
-      .ambient-shadow { box-shadow: 0px 4px 32px rgba(25,28,30,0.06); }
-    }
-  </style>
+  
+  
+  <link rel="stylesheet" href="assets/css/tailwind.min.css">
+  <link rel="stylesheet" href="assets/css/tailwind.min.css">
 </head>
 
 <body class="bg-surface text-on-surface font-body antialiased">
