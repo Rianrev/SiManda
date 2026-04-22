@@ -35,6 +35,77 @@
       .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
     }
   </style>
+  <style>
+    /* ===== TECH BACKGROUND ANIMATIONS ===== */
+    @keyframes grid-move {
+      0%   { background-position: 0 0; }
+      100% { background-position: 50px 50px; }
+    }
+    @keyframes scan-line {
+      0%   { transform: translateY(-100%); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { transform: translateY(100vh); opacity: 0; }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(1); }
+      50%      { opacity: 0.7;  transform: translate(-50%, -50%) scale(1.15); }
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes spin-reverse {
+      from { transform: rotate(360deg); }
+      to   { transform: rotate(0deg); }
+    }
+    @keyframes float-up {
+      0%   { transform: translateY(0); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { transform: translateY(-100vh); opacity: 0; }
+    }
+    @keyframes logo-float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+    @keyframes dash-flow {
+      to { stroke-dashoffset: -200; }
+    }
+
+    .tech-grid {
+      background-image:
+        linear-gradient(rgba(96, 165, 250, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(96, 165, 250, 0.08) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: grid-move 15s linear infinite;
+    }
+    .scan-line {
+      animation: scan-line 6s ease-in-out infinite;
+    }
+    .pulse-glow {
+      animation: pulse-glow 4s ease-in-out infinite;
+    }
+    .spin-slow       { animation: spin-slow 30s linear infinite; }
+    .spin-reverse    { animation: spin-reverse 20s linear infinite; }
+    .logo-float      { animation: logo-float 4s ease-in-out infinite; }
+
+    .particle {
+      position: absolute;
+      bottom: -10px;
+      width: 3px;
+      height: 3px;
+      border-radius: 9999px;
+      background: rgba(96, 165, 250, 0.7);
+      box-shadow: 0 0 8px rgba(96, 165, 250, 0.8);
+      animation: float-up linear infinite;
+    }
+
+    .hex-dashed {
+      stroke-dasharray: 8 6;
+      animation: dash-flow 8s linear infinite;
+    }
+  </style>
 </head>
 
 <body class="bg-slate-100 font-sans antialiased">
@@ -72,15 +143,70 @@
   </aside>
 
   <!-- ===== MAIN CONTENT ===== -->
-  <main id="main" class="ml-64 mt-14 h-[calc(100vh-3.5rem)] transition-all duration-300 relative overflow-hidden">
-    <img src="assets/img/Picture3.png"
-      class="absolute inset-0 w-full h-full object-cover"
-      alt="SI MANDA Dashboard">
-    <div class="absolute bottom-4 left-0 right-0 flex justify-center">
-      <span class="bg-black/30 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">
+  <main id="main" class="ml-64 mt-14 h-[calc(100vh-3.5rem)] transition-all duration-300 relative overflow-hidden bg-gradient-to-br from-navy-950 via-navy-900 to-navy-800">
+
+    <!-- Tech grid overlay -->
+    <div class="absolute inset-0 tech-grid opacity-60 pointer-events-none"></div>
+
+    <!-- Radial glow -->
+    <div class="absolute left-1/2 top-1/2 w-[700px] h-[700px] rounded-full pulse-glow pointer-events-none"
+         style="background: radial-gradient(circle, rgba(30, 77, 140, 0.55) 0%, rgba(15, 39, 68, 0.2) 45%, transparent 70%);"></div>
+
+    <!-- Scan line -->
+    <div class="absolute inset-x-0 h-24 scan-line pointer-events-none"
+         style="background: linear-gradient(to bottom, transparent 0%, rgba(56, 189, 248, 0.12) 50%, transparent 100%);"></div>
+
+    <!-- Floating particles -->
+    <div id="particles" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+
+    <!-- Corner HUD brackets -->
+    <div class="absolute top-6 left-6 w-10 h-10 border-l-2 border-t-2 border-cyan-400/40 pointer-events-none"></div>
+    <div class="absolute top-6 right-6 w-10 h-10 border-r-2 border-t-2 border-cyan-400/40 pointer-events-none"></div>
+    <div class="absolute bottom-6 left-6 w-10 h-10 border-l-2 border-b-2 border-cyan-400/40 pointer-events-none"></div>
+    <div class="absolute bottom-6 right-6 w-10 h-10 border-r-2 border-b-2 border-cyan-400/40 pointer-events-none"></div>
+
+    <!-- Center: Logo + Rings -->
+    <div class="absolute inset-0 flex flex-col items-center justify-center">
+      <div class="relative flex items-center justify-center" style="width: 420px; height: 420px;">
+
+        <!-- Outer rotating ring -->
+        <svg class="absolute inset-0 w-full h-full spin-slow" viewBox="0 0 420 420" fill="none">
+          <circle cx="210" cy="210" r="200" stroke="rgba(56, 189, 248, 0.25)" stroke-width="1" class="hex-dashed"/>
+          <circle cx="210" cy="210" r="200" stroke="rgba(56, 189, 248, 0.15)" stroke-width="1"/>
+          <circle cx="210" cy="10"  r="4" fill="#38bdf8"/>
+          <circle cx="210" cy="410" r="4" fill="#38bdf8"/>
+          <circle cx="10"  cy="210" r="3" fill="#60a5fa"/>
+          <circle cx="410" cy="210" r="3" fill="#60a5fa"/>
+        </svg>
+
+        <!-- Inner counter-rotating ring -->
+        <svg class="absolute w-[340px] h-[340px] spin-reverse" viewBox="0 0 340 340" fill="none">
+          <circle cx="170" cy="170" r="165" stroke="rgba(96, 165, 250, 0.2)" stroke-width="1" stroke-dasharray="4 8"/>
+          <circle cx="170" cy="5"   r="3" fill="#60a5fa"/>
+          <circle cx="170" cy="335" r="3" fill="#60a5fa"/>
+        </svg>
+
+        <!-- Logo -->
+        <img src="assets/img/war-on-drugs.png"
+          class="relative w-64 h-64 object-contain logo-float"
+          style="filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.45));"
+          alt="BNN War on Drugs For Humanity">
+      </div>
+
+      <!-- Title -->
+      <div class="mt-6 text-center">
+        <h1 class="text-white font-bold text-2xl tracking-widest drop-shadow-lg">SI MANDA</h1>
+        <p class="text-cyan-200/80 text-xs tracking-wider mt-1">SISTEM INFORMASI MONITORING DATA</p>
+      </div>
+    </div>
+
+    <!-- Bottom info -->
+    <div class="absolute bottom-6 left-0 right-0 flex justify-center">
+      <span class="bg-white/10 text-white text-xs px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10">
         Pilih menu di sidebar untuk mulai memantau data
       </span>
     </div>
+
   </main>
 
   <script>
@@ -98,6 +224,24 @@
       main.classList.toggle('ml-64', open);
       main.classList.toggle('ml-0', !open);
     });
+
+    // Generate floating tech particles
+    (() => {
+      const container = document.getElementById('particles');
+      if (!container) return;
+      for (let i = 0; i < 30; i++) {
+        const p = document.createElement('span');
+        p.className = 'particle';
+        p.style.left              = Math.random() * 100 + '%';
+        p.style.animationDuration = (8 + Math.random() * 12) + 's';
+        p.style.animationDelay    = (Math.random() * 10) + 's';
+        p.style.opacity           = (0.3 + Math.random() * 0.5).toFixed(2);
+        const s = 2 + Math.random() * 3;
+        p.style.width  = s + 'px';
+        p.style.height = s + 'px';
+        container.appendChild(p);
+      }
+    })();
 
     document.addEventListener('DOMContentLoaded', () => {
       fetch('sidebar.html')
