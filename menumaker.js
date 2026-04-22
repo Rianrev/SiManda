@@ -7,7 +7,7 @@ const template = [
     ...(isMac ? [{
         label: app.name,
         submenu: [
-            { role: 'about '},
+            { role: 'about' },
             { type: 'separator' },
             { role: 'quit' }
         ]
