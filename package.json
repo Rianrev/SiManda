@@ -9,6 +9,7 @@
     "dev": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
+    "publish": "electron-forge publish",
     "build": "node scripts/build-dist.js",
     "build:installer": "node scripts/build-dist.js --target installer",
     "build:portable": "node scripts/build-dist.js --target portable",
@@ -16,7 +17,8 @@
   },
   "license": "ISC",
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
+    "electron-squirrel-startup": "^1.0.1",
+    "electron-updater": "^6.8.3"
   },
   "build": {
     "appId": "com.bnn.simanda",
@@ -60,6 +62,7 @@
     "@electron-forge/maker-zip": "^7.4.0",
     "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
     "@electron-forge/plugin-fuses": "^7.4.0",
+    "@electron-forge/publisher-github": "^7.11.2",
     "@electron/fuses": "^1.8.0",
     "@tailwindcss/cli": "^4.2.4",
     "autoprefixer": "^10.4.19",
