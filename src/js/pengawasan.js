@@ -1,6 +1,6 @@
 const session = getSession()
 if (session) {
-  document.getElementById('userBadge').textContent = session.username
+  document.getElementById('userBadge').textContent = session.region === '*' ? 'Master' : session.region
 }
 
 const pageTitle = document.body.dataset.title || ''

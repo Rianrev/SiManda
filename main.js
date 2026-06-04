@@ -1,13 +1,120 @@
-const { app, BrowserWindow, Menu, ipcMain } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron')
 const path = require('node:path')
+const fsp = require('node:fs/promises')
+const log = require('electron-log')
 const { mainMenu } = require('./menumaker')
 const { autoUpdater } = require('electron-updater')
 
-// Handle Squirrel install/uninstall events on Windows
 if (require('electron-squirrel-startup')) app.quit()
 
+log.transports.file.level = 'info'
+autoUpdater.logger = log
 autoUpdater.autoDownload = true
-autoUpdater.autoInstallOnAppQuit = true
+// Jangan install diam-diam saat app ditutup — update hanya dipasang kalau
+// user klik tombol "Restart & Install" (memanggil quitAndInstall).
+autoUpdater.autoInstallOnAppQuit = false
+
+// Persistent update state — so any page (re)loaded later can query current status
+const updateState = {
+  status: 'idle',   // idle | downloading | ready
+  version: null,
+  percent: 0,
+}
+
+function broadcast(channel, payload) {
+  BrowserWindow.getAllWindows().forEach(win => {
+    if (!win.isDestroyed()) win.webContents.send(channel, payload)
+  })
+}
+
+function compareVersions(a, b) {
+  const pa = String(a).split('.').map(Number)
+  const pb = String(b).split('.').map(Number)
+  for (let i = 0; i < 3; i++) {
+    const d = (pa[i] || 0) - (pb[i] || 0)
+    if (d !== 0) return d > 0 ? 1 : -1
+  }
+  return 0
+}
+
+// STEP 1: Check the local updater cache directly — fast, works offline.
+// If a newer installer is already downloaded, show the notification immediately
+// without waiting for the GitHub round-trip.
+async function checkCachedUpdate() {
+  try {
+    const baseDir = process.env.LOCALAPPDATA || app.getPath('appData')
+    const pendingDir = path.join(baseDir, 'simanda-updater', 'pending')
+    const info = JSON.parse(await fsp.readFile(path.join(pendingDir, 'update-info.json'), 'utf-8'))
+    if (!info || !info.fileName) return
+
+    await fsp.access(path.join(pendingDir, info.fileName)) // installer must physically exist
+
+    const m = info.fileName.match(/(\d+\.\d+\.\d+)/)
+    if (!m) return
+    const cachedVersion = m[1]
+
+    if (compareVersions(cachedVersion, app.getVersion()) <= 0) return // not newer than current
+
+    log.info(`Local cache: update ${cachedVersion} already downloaded (current ${app.getVersion()})`)
+    updateState.status = 'ready'
+    updateState.version = cachedVersion
+    updateState.percent = 100
+    broadcast('update-downloaded', cachedVersion)
+  } catch (_) {
+    // no cache / unreadable — ignore; the GitHub check will handle it
+  }
+}
+
+autoUpdater.on('checking-for-update',  () => log.info('Checking for update...'))
+autoUpdater.on('update-not-available', (i) => log.info('No update. Current is latest:', i.version))
+autoUpdater.on('error',                (e) => log.error('Updater error:', e == null ? 'unknown' : (e.stack || e).toString()))
+
+autoUpdater.on('update-available', (info) => {
+  log.info('Update available:', info.version)
+  // Only flip to "downloading" UI if we aren't already showing a ready (cached) update
+  if (updateState.status !== 'ready') {
+    updateState.status = 'downloading'
+    updateState.version = info.version
+    updateState.percent = 0
+    broadcast('update-available', info.version)
+  }
+})
+
+autoUpdater.on('download-progress', (progress) => {
+  const pct = Math.round(progress.percent)
+  log.info(`Downloading: ${pct}%`)
+  updateState.status = 'downloading'
+  updateState.percent = pct
+  broadcast('update-progress', pct)
+})
+
+autoUpdater.on('update-downloaded', (info) => {
+  log.info('Update downloaded:', info.version)
+  updateState.status = 'ready'
+  updateState.version = info.version
+  updateState.percent = 100
+  broadcast('update-downloaded', info.version)
+})
+
+// Renderer queries current update status on load (handles already-downloaded case)
+ipcMain.handle('get-update-status', () => updateState)
+
+// Renderer requests restart to install update
+ipcMain.on('restart-to-update', () => {
+  autoUpdater.quitAndInstall()
+})
+
+// Buka URL (mis. link download Google Drive) di browser eksternal
+ipcMain.on('open-external', (_e, url) => {
+  if (typeof url === 'string' && /^https?:\/\//.test(url)) {
+    shell.openExternal(url)
+  }
+})
+
+// Versi aplikasi (sinkron) untuk ditampilkan di sidebar
+ipcMain.on('get-app-version-sync', (e) => {
+  e.returnValue = app.getVersion()
+})
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -28,9 +135,9 @@ function createWindow() {
 app.whenReady().then(() => {
   const win = createWindow()
 
-  // Check for updates silently after window loads
-  win.webContents.once('did-finish-load', () => {
-    autoUpdater.checkForUpdates().catch(() => {})
+  win.webContents.once('did-finish-load', async () => {
+    await checkCachedUpdate()                       // 1. local cache → instant notif
+    autoUpdater.checkForUpdates().catch(() => {})   // 2. GitHub → validate + find newer
   })
 
   app.on('activate', () => {
@@ -40,16 +147,4 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
-})
-
-// Notify all windows when update is downloaded and ready to install
-autoUpdater.on('update-downloaded', (info) => {
-  BrowserWindow.getAllWindows().forEach(win => {
-    win.webContents.send('update-downloaded', info.version)
-  })
-})
-
-// Renderer requests restart to install update
-ipcMain.on('restart-to-update', () => {
-  autoUpdater.quitAndInstall()
 })
