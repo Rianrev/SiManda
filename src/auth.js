@@ -127,7 +127,7 @@ function filterSidebar() {
 //  TANIA — widget support (floating button + popup) di semua halaman
 //  GANTI link dummy di bawah dengan link WhatsApp asli nanti.
 // ============================================================
-const TANIA_LINK = '#'; // dummy — contoh nanti: https://wa.me/62812xxxxxxx?text=Halo%20TANIA
+const TANIA_LINK = 'https://wa.me/6281280391887?text=Halo%20TANIA'; // dummy — contoh nanti: https://wa.me/62812xxxxxxx?text=Halo%20TANIA
 
 function openTaniaLink() {
   if (!TANIA_LINK || TANIA_LINK === '#') return;
