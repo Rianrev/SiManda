@@ -1,101 +1,76 @@
 /**
- * SI MANDA — Apps Script Web App backend untuk CRUD Google Sheets.
+ * SI MANDA — Apps Script Web App backend (berbasis POSISI kolom).
+ * Dipakai untuk Input Target (append) & Input Realisasi (update kolom).
  *
- * Cara deploy:
- *   1. Buka Google Sheet target → menu Extensions → Apps Script
- *   2. Hapus isi default, paste seluruh file ini
- *   3. Ganti SECRET_TOKEN di bawah dengan string acak rahasia Anda
- *   4. Deploy → New deployment → type: Web app
+ * Deploy:
+ *   1. Buka spreadsheet → Extensions → Apps Script
+ *   2. Paste seluruh file ini, ganti SECRET_TOKEN
+ *   3. Deploy → New deployment → Web app
  *        - Execute as: Me
  *        - Who has access: Anyone
- *   5. Copy "Web app URL" → berikan ke aplikasi (dipakai di sisi app)
+ *   4. Copy "Web app URL" → taruh di src/js/input-config.js (APPS_SCRIPT.url)
  *
- * Endpoint:
- *   GET  ?action=list&sheet=NamaSheet&token=...           → semua baris (JSON)
- *   POST {action:'add',    sheet, token, row:{...}}        → tambah baris
- *   POST {action:'update', sheet, token, rowIndex, row}    → edit baris (rowIndex = nomor baris data, mulai 0)
- *   POST {action:'delete', sheet, token, rowIndex}         → hapus baris
+ * Endpoint (POST JSON, atau GET query):
+ *   { action:'append', sheet, token, rows:[[...kolom A..K...], ...] }   → tambah baris
+ *   { action:'list',   sheet, token }                                   → semua baris + nomor barisnya
+ *   { action:'update', sheet, token, row:<nomor baris 1-based>, cols:{ "7":val, "8":val } } → set sel
  *
- * Baris pertama sheet dianggap HEADER. Object `row` dipetakan berdasarkan nama kolom header.
+ * Catatan: pakai posisi kolom (bukan nama header) karena header "Anggaran"
+ * muncul lebih dari sekali. Kolom 1-based: 1=A, 2=B, dst.
  */
 
 const SECRET_TOKEN = 'GANTI_DENGAN_TOKEN_RAHASIA';
 
-function doGet(e) {
-  return handle(e, (e.parameter || {}));
-}
-
+function doGet(e)  { return handle((e && e.parameter) || {}); }
 function doPost(e) {
-  let body = {};
-  try { body = JSON.parse(e.postData.contents); } catch (err) {}
-  return handle(e, body);
+  var body = {};
+  try { body = JSON.parse(e.postData.contents); } catch (_) {}
+  return handle(body);
 }
 
-function handle(e, params) {
+function handle(p) {
   try {
-    if (params.token !== SECRET_TOKEN) {
-      return json({ ok: false, error: 'Unauthorized' });
-    }
+    if (p.token !== SECRET_TOKEN) return json({ ok: false, error: 'Unauthorized' });
+    if (!p.sheet) return json({ ok: false, error: 'Parameter "sheet" wajib' });
 
-    const action = params.action;
-    const sheetName = params.sheet;
-    if (!sheetName) return json({ ok: false, error: 'Parameter "sheet" wajib' });
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(p.sheet);
+    if (!sheet) return json({ ok: false, error: 'Tab tidak ditemukan: ' + p.sheet });
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName(sheetName);
-    if (!sheet) return json({ ok: false, error: 'Sheet tidak ditemukan: ' + sheetName });
-
-    switch (action) {
-      case 'list':   return json({ ok: true, data: listRows(sheet) });
-      case 'add':    return json(addRow(sheet, params.row));
-      case 'update': return json(updateRow(sheet, params.rowIndex, params.row));
-      case 'delete': return json(deleteRow(sheet, params.rowIndex));
-      default:       return json({ ok: false, error: 'Action tidak dikenal: ' + action });
+    switch (p.action) {
+      case 'append': return json(appendRows(sheet, p.rows));
+      case 'list':   return json(listRows(sheet));
+      case 'update': return json(updateCols(sheet, p.row, p.cols));
+      default:       return json({ ok: false, error: 'Action tidak dikenal: ' + p.action });
     }
   } catch (err) {
     return json({ ok: false, error: String(err) });
   }
 }
 
-function getHeaders(sheet) {
-  return sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
+function appendRows(sheet, rows) {
+  if (!rows || !rows.length) return { ok: false, error: 'rows kosong' };
+  rows.forEach(function (r) { sheet.appendRow(r); });
+  return { ok: true, added: rows.length };
 }
 
 function listRows(sheet) {
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) return [];
-  const headers = getHeaders(sheet);
-  const values = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
-  return values.map((r, i) => {
-    const obj = { _row: i }; // index baris data (0-based), dipakai untuk update/delete
-    headers.forEach((h, c) => { obj[h] = r[c]; });
-    return obj;
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastRow < 1) return { ok: true, rows: [] };
+  var values = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  var out = [];
+  for (var i = 0; i < values.length; i++) {
+    out.push({ row: i + 1, values: values[i] });
+  }
+  return { ok: true, rows: out, lastRow: lastRow, lastCol: lastCol };
+}
+
+function updateCols(sheet, row, cols) {
+  if (!row || !cols) return { ok: false, error: 'row/cols wajib' };
+  Object.keys(cols).forEach(function (c) {
+    sheet.getRange(Number(row), Number(c)).setValue(cols[c]);
   });
-}
-
-function addRow(sheet, row) {
-  if (!row) return { ok: false, error: 'Parameter "row" wajib' };
-  const headers = getHeaders(sheet);
-  const newRow = headers.map(h => (row[h] !== undefined ? row[h] : ''));
-  sheet.appendRow(newRow);
-  return { ok: true, message: 'Baris ditambahkan' };
-}
-
-function updateRow(sheet, rowIndex, row) {
-  if (rowIndex === undefined || rowIndex === null) return { ok: false, error: 'rowIndex wajib' };
-  if (!row) return { ok: false, error: 'Parameter "row" wajib' };
-  const headers = getHeaders(sheet);
-  const target = Number(rowIndex) + 2; // +2: lewati header & konversi ke 1-based
-  const current = sheet.getRange(target, 1, 1, headers.length).getValues()[0];
-  const merged = headers.map((h, c) => (row[h] !== undefined ? row[h] : current[c]));
-  sheet.getRange(target, 1, 1, headers.length).setValues([merged]);
-  return { ok: true, message: 'Baris diperbarui' };
-}
-
-function deleteRow(sheet, rowIndex) {
-  if (rowIndex === undefined || rowIndex === null) return { ok: false, error: 'rowIndex wajib' };
-  sheet.deleteRow(Number(rowIndex) + 2);
-  return { ok: true, message: 'Baris dihapus' };
+  return { ok: true, updated: row };
 }
 
 function json(obj) {

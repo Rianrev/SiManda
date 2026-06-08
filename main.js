@@ -116,6 +116,22 @@ ipcMain.on('get-app-version-sync', (e) => {
   e.returnValue = app.getVersion()
 })
 
+// Proxy request ke Apps Script Web App (dilakukan di main → hindari CORS renderer)
+ipcMain.handle('apps-script', async (_e, { url, payload }) => {
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      redirect: 'follow',
+    })
+    const text = await res.text()
+    try { return JSON.parse(text) }
+    catch { return { ok: false, error: 'Respon bukan JSON: ' + text.slice(0, 300) } }
+  } catch (e) {
+    return { ok: false, error: String(e) }
+  }
+})
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,

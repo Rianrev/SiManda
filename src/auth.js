@@ -175,7 +175,7 @@ function initTaniaWidget() {
     '</div>' +
     '<div style="padding:20px;">' +
       '<h3 style="color:#fff;font-family:Manrope,Inter,sans-serif;font-size:18px;font-weight:700;line-height:1.35;margin:0 0 10px;">Bingung terkait bidang administrasi pemerintahan di BNN?</h3>' +
-      '<p style="color:#94a3b8;font-size:13.5px;line-height:1.6;margin:0 0 18px;">Konsultasikan dengan TANIA — Tim Layanan Inspektorat I siap membantu Anda dengan cepat dan profesional.</p>' +
+      '<p style="color:#94a3b8;font-size:13.5px;line-height:1.6;margin:0 0 18px;">Konsultasikan dengan TANIA — Tim Layanan Inspektorat Utama siap membantu Anda dengan cepat dan profesional.</p>' +
       '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:26px 16px;text-align:center;margin-bottom:16px;">' +
         '<div style="display:flex;justify-content:center;">' + chatIcon(40, '#cbd5e1') + '</div>' +
         '<p style="color:#94a3b8;font-size:12.5px;line-height:1.5;margin:14px 0 0;">Hubungi kami melalui WhatsApp untuk konsultasi langsung</p>' +
