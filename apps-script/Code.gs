@@ -37,10 +37,12 @@ function handle(p) {
     if (!sheet) return json({ ok: false, error: 'Tab tidak ditemukan: ' + p.sheet });
 
     switch (p.action) {
-      case 'append': return json(appendRows(sheet, p.rows));
-      case 'list':   return json(listRows(sheet));
-      case 'update': return json(updateCols(sheet, p.row, p.cols));
-      default:       return json({ ok: false, error: 'Action tidak dikenal: ' + p.action });
+      case 'info':       return json({ ok: true, satker: String(sheet.getRange('A1').getValue() || '') });
+      case 'append':     return json(appendRows(sheet, p.rows));
+      case 'list':       return json(listRows(sheet));
+      case 'update':     return json(updateCols(sheet, p.row, p.cols));
+      case 'updateMany': return json(updateMany(sheet, p.updates));
+      default:           return json({ ok: false, error: 'Action tidak dikenal: ' + p.action });
     }
   } catch (err) {
     return json({ ok: false, error: String(err) });
@@ -49,7 +51,12 @@ function handle(p) {
 
 function appendRows(sheet, rows) {
   if (!rows || !rows.length) return { ok: false, error: 'rows kosong' };
-  rows.forEach(function (r) { sheet.appendRow(r); });
+  // Nama Satker = sel A1. Auto-isi kolom B (Satker) bila kosong.
+  var satker = String(sheet.getRange('A1').getValue() || '');
+  rows.forEach(function (r) {
+    if (satker && (r[1] === '' || r[1] == null)) r[1] = satker;
+    sheet.appendRow(r);
+  });
   return { ok: true, added: rows.length };
 }
 
@@ -71,6 +78,16 @@ function updateCols(sheet, row, cols) {
     sheet.getRange(Number(row), Number(c)).setValue(cols[c]);
   });
   return { ok: true, updated: row };
+}
+
+function updateMany(sheet, updates) {
+  if (!updates || !updates.length) return { ok: false, error: 'updates kosong' };
+  updates.forEach(function (u) {
+    Object.keys(u.cols).forEach(function (c) {
+      sheet.getRange(Number(u.row), Number(c)).setValue(u.cols[c]);
+    });
+  });
+  return { ok: true, updated: updates.length };
 }
 
 function json(obj) {

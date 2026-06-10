@@ -118,17 +118,25 @@ ipcMain.on('get-app-version-sync', (e) => {
 
 // Proxy request ke Apps Script Web App (dilakukan di main → hindari CORS renderer)
 ipcMain.handle('apps-script', async (_e, { url, payload }) => {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 30000) // 30 dtk: cegah hang di jaringan lambat
   try {
     const res = await fetch(url, {
       method: 'POST',
       body: JSON.stringify(payload),
       redirect: 'follow',
+      signal: controller.signal,
     })
     const text = await res.text()
     try { return JSON.parse(text) }
-    catch { return { ok: false, error: 'Respon bukan JSON: ' + text.slice(0, 300) } }
+    catch { return { ok: false, error: 'Respon tidak valid dari server: ' + text.slice(0, 200) } }
   } catch (e) {
-    return { ok: false, error: String(e) }
+    if (e && e.name === 'AbortError') {
+      return { ok: false, error: 'Koneksi timeout (30 detik). Periksa jaringan Anda lalu coba lagi.' }
+    }
+    return { ok: false, error: 'Gagal terhubung ke server. Periksa jaringan Anda. (' + String((e && e.message) || e) + ')' }
+  } finally {
+    clearTimeout(timer)
   }
 })
 

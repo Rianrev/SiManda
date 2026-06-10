@@ -123,11 +123,11 @@ function openInputPopup() {
         '<span><span style="display:block;color:#fff;font-size:14px;font-weight:600;">Input Target</span>' +
         '<span style="color:#94a3b8;font-size:12px;">Tetapkan target output & anggaran</span></span>' +
       '</button>' +
-      '<button id="btnInputRealisasi" disabled style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;' +
-        'border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);border-radius:12px;cursor:not-allowed;text-align:left;opacity:0.55;">' +
+      '<button id="btnInputRealisasi" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;' +
+        'border:1px solid rgba(52,211,153,0.4);background:rgba(52,211,153,0.12);border-radius:12px;cursor:pointer;text-align:left;">' +
         '<span class="material-symbols-outlined" style="color:#34d399;">trending_up</span>' +
         '<span><span style="display:block;color:#fff;font-size:14px;font-weight:600;">Input Realisasi</span>' +
-        '<span id="realisasiHint" style="color:#94a3b8;font-size:12px;">Memeriksa data target…</span></span>' +
+        '<span style="color:#94a3b8;font-size:12px;">Catat realisasi per semester</span></span>' +
       '</button>' +
     '</div>';
 
@@ -137,37 +137,12 @@ function openInputPopup() {
   overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
   document.getElementById('inputClose').addEventListener('click', close);
 
+  const back = '&back=' + encodeURIComponent(window.location.href);
   document.getElementById('btnInputTarget').addEventListener('click', () => {
-    window.location.href = 'input-target.html?satker=' + encodeURIComponent(sheetTitle);
+    window.location.href = 'input-target.html?satker=' + encodeURIComponent(sheetTitle) + back;
   });
-
-  const realBtn = document.getElementById('btnInputRealisasi');
-  const realHint = document.getElementById('realisasiHint');
-
-  const enableRealisasi = () => {
-    realBtn.disabled = false;
-    realBtn.style.cursor = 'pointer';
-    realBtn.style.opacity = '1';
-    realBtn.style.border = '1px solid rgba(52,211,153,0.4)';
-    realBtn.style.background = 'rgba(52,211,153,0.12)';
-    realHint.textContent = 'Catat realisasi per semester';
-    realBtn.addEventListener('click', () => {
-      window.location.href = 'input-realisasi.html?satker=' + encodeURIComponent(sheetTitle);
-    });
-  };
-
-  // Cek apakah Target sudah ada → aktifkan Realisasi
-  appsScriptRequest({ action: 'list', sheet: sheetTitle }).then((res) => {
-    if (res && res.ok && Array.isArray(res.rows)) {
-      const hasTarget = res.rows.some(r =>
-        Number(r.values[COL.TAHUN - 1]) === TAHUN_BERJALAN && String(r.values[COL.TARGET_OUTPUT - 1]).trim() !== ''
-      );
-      if (hasTarget) enableRealisasi();
-      else realHint.textContent = 'Isi Target terlebih dahulu';
-    } else {
-      // Tidak bisa verifikasi (mis. URL Apps Script belum diisi) — tetap kunci & beri info
-      realHint.textContent = res && res.error ? 'Tidak bisa cek target' : 'Isi Target terlebih dahulu';
-    }
+  document.getElementById('btnInputRealisasi').addEventListener('click', () => {
+    window.location.href = 'input-realisasi.html?satker=' + encodeURIComponent(sheetTitle) + back;
   });
 }
 
