@@ -94,8 +94,9 @@ function renderRows() {
   rowsEl.innerHTML = rows.map(r => {
     const out  = sem === 'I' ? r.values[COL.REAL1_OUTPUT - 1]   : r.values[COL.REAL2_OUTPUT - 1]
     const ang  = sem === 'I' ? r.values[COL.REAL1_ANGGARAN - 1] : r.values[COL.REAL2_ANGGARAN - 1]
-    const hamb = (sem === 'I' ? r.values[COL.HAMBATAN1 - 1]  : r.values[COL.HAMBATAN2 - 1])  || ''
-    const pend = (sem === 'I' ? r.values[COL.PENDUKUNG1 - 1] : r.values[COL.PENDUKUNG2 - 1]) || ''
+    const hamb = (sem === 'I' ? r.values[COL.HAMBATAN1 - 1]   : r.values[COL.HAMBATAN2 - 1])   || ''
+    const pend = (sem === 'I' ? r.values[COL.PENDUKUNG1 - 1]  : r.values[COL.PENDUKUNG2 - 1])  || ''
+    const dd   = (sem === 'I' ? r.values[COL.DATADUKUNG1 - 1] : r.values[COL.DATADUKUNG2 - 1]) || ''
 
     const tOut = toNum(r.values[COL.TARGET_OUTPUT - 1])
     const tAng = toNum(r.values[COL.TARGET_ANGGARAN - 1])
@@ -140,6 +141,11 @@ function renderRows() {
             <textarea data-f="pendukung" rows="4" ${dis} placeholder="-"
               class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm ${inputCls} focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40 resize-none">${escapeHtml(pend)}</textarea>
           </div>
+        </div>
+        <div class="mt-3">
+          <label class="block text-xs text-slate-500 mb-1">Link Data Dukung</label>
+          <input type="url" data-f="datadukung" ${dis} value="${escapeHtml(dd)}" placeholder="https://drive.google.com/…"
+            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm ${inputCls} focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40">
         </div>
       </div>
     `
@@ -210,15 +216,19 @@ submitBtn.addEventListener('click', async () => {
     const ang  = card.querySelector('[data-f="anggaran"]').value.trim()
     const hamb = card.querySelector('[data-f="hambatan"]').value.trim()
     const pend = card.querySelector('[data-f="pendukung"]').value.trim()
+    let dd     = card.querySelector('[data-f="datadukung"]').value.trim()
+    // Lengkapi skema agar link bisa dibuka dari dashboard (mis. "drive.google.com/…")
+    if (dd && !/^https?:\/\//i.test(dd)) dd = 'https://' + dd
 
-    if (out === '' && ang === '' && hamb === '' && pend === '') return // lewati card kosong
+    if (out === '' && ang === '' && hamb === '' && pend === '' && dd === '') return // lewati card kosong
 
     items.push({
-      fokus:     card.getAttribute('data-fokus'),
-      output:    out === '' ? '' : Number(out),
-      anggaran:  parseRupiah(ang),
-      hambatan:  hamb,
-      pendukung: pend,
+      fokus:      card.getAttribute('data-fokus'),
+      output:     out === '' ? '' : Number(out),
+      anggaran:   parseRupiah(ang),
+      hambatan:   hamb,
+      pendukung:  pend,
+      dataDukung: dd,
     })
   })
 

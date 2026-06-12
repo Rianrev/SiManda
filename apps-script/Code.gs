@@ -15,7 +15,7 @@
  *   { action:'upsertTarget',    sheet, token, tahun, items:[{no,fokus,output,anggaran}] }
  *       → atomik: update baris (fokus,tahun) yang sudah ada, sisanya append. Anti baris ganda.
  *   { action:'updateRealisasi', sheet, token, tahun, semester:'I'|'II',
- *       items:[{fokus,output,anggaran,hambatan,pendukung}] }
+ *       items:[{fokus,output,anggaran,hambatan,pendukung,dataDukung}] }
  *       → cari baris via (fokus,tahun) — aman walau nomor baris bergeser.
  *   Lawas (masih didukung): append, update, updateMany — semua kini di dalam lock.
  *
@@ -33,13 +33,14 @@ const SECRET_TOKEN = 'GANTI_DENGAN_TOKEN_RAHASIA';
 const AUTH_SPREADSHEET_ID = 'GANTI_DENGAN_ID_SPREADSHEET_AUTH';
 
 // Posisi kolom (1-based) — HARUS sama dengan COL di src/js/input-config.js
+// Blok per semester (5 kolom berurutan): Output, Anggaran, Hambatan, Pendukung, Link Data Dukung.
 const COLS = {
   NO: 1, SATKER: 2, FOKUS: 3,
   TARGET_OUTPUT: 4, TARGET_ANGGARAN: 5, TAHUN: 6,
-  REAL1_OUTPUT: 7,  REAL1_ANGGARAN: 8,  HAMBATAN1: 9,  PENDUKUNG1: 10,
-  REAL2_OUTPUT: 11, REAL2_ANGGARAN: 12, HAMBATAN2: 13, PENDUKUNG2: 14,
+  REAL1_OUTPUT: 7,  REAL1_ANGGARAN: 8,  HAMBATAN1: 9,  PENDUKUNG1: 10, DATADUKUNG1: 11,
+  REAL2_OUTPUT: 12, REAL2_ANGGARAN: 13, HAMBATAN2: 14, PENDUKUNG2: 15, DATADUKUNG2: 16,
 };
-const SHEET_COLS = 14;
+const SHEET_COLS = 16;
 
 function doGet(e)  { return handle((e && e.parameter) || {}); }
 function doPost(e) {
@@ -167,7 +168,7 @@ function upsertTarget(sheet, tahun, items) {
 /**
  * UPDATE REALISASI — cari baris via (fokus,tahun), BUKAN nomor baris dari client
  * (nomor baris bisa bergeser bila ada baris baru/terhapus sejak halaman dimuat).
- * Kolom semester berurutan: Sem I = G..J (7-10), Sem II = K..N (11-14).
+ * Kolom semester berurutan (5): Sem I = G..K (7-11), Sem II = L..P (12-16).
  */
 function updateRealisasi(sheet, tahun, semester, items) {
   if (!validTahun(tahun)) return { ok: false, error: 'Tahun tidak valid: ' + tahun };
@@ -185,7 +186,7 @@ function updateRealisasi(sheet, tahun, semester, items) {
     if (out === null || ang === null) {
       return { ok: false, error: 'Output/Anggaran harus angka ≥ 0 ("' + fokus + '")' };
     }
-    clean.push({ fokus: fokus, vals: [out, ang, cleanText(it.hambatan), cleanText(it.pendukung)] });
+    clean.push({ fokus: fokus, vals: [out, ang, cleanText(it.hambatan), cleanText(it.pendukung), cleanText(it.dataDukung)] });
   }
 
   var index = buildRowIndex(sheet);
@@ -200,7 +201,7 @@ function updateRealisasi(sheet, tahun, semester, items) {
 
   var updated = 0;
   clean.forEach(function (it) {
-    sheet.getRange(index[it.fokus + '|' + tahunN], startCol, 1, 4).setValues([it.vals]);
+    sheet.getRange(index[it.fokus + '|' + tahunN], startCol, 1, 5).setValues([it.vals]);
     updated++;
   });
   return { ok: true, updated: updated };

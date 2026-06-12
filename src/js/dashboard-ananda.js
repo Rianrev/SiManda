@@ -208,6 +208,8 @@ function parseRows(rows) {
       pend1: String(v[COL.PENDUKUNG1 - 1] || '').trim(),
       hamb2: String(v[COL.HAMBATAN2 - 1] || '').trim(),
       pend2: String(v[COL.PENDUKUNG2 - 1] || '').trim(),
+      dd1:   String(v[COL.DATADUKUNG1 - 1] || '').trim(),
+      dd2:   String(v[COL.DATADUKUNG2 - 1] || '').trim(),
     });
   }
   return out;
@@ -245,15 +247,25 @@ function updateMetrics(rows) {
 function cellNum(v) { return v ? `<span class="font-medium">${fmtNum(v)}</span>` : '<span class="text-slate-300">-</span>'; }
 function cellRp(v)  { return v ? `<span class="text-on-variant">${fmtRupiahFull(v)}</span>` : '<span class="text-slate-300">-</span>'; }
 
+// Tombol pembuka link data dukung (hanya tampil bila link http/https ada di sheet)
+function ddButton(url, label) {
+  if (!/^https?:\/\//i.test(url)) return '';
+  return `<button data-dd="${escapeHtml(url)}" title="${escapeHtml(url)}"
+    class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-secondary-fixed text-secondary text-[11px] font-semibold hover:brightness-95 cursor-pointer">
+    <span class="material-symbols-outlined" style="font-size:13px">open_in_new</span>${label}</button>`;
+}
+
 function renderTargetTable(rows) {
   if (!rows.length) {
-    el.targetTabel.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-on-variant text-sm">Belum ada data untuk tahun ini</td></tr>`;
+    el.targetTabel.innerHTML = `<tr><td colspan="6" class="py-10 text-center text-on-variant text-sm">Belum ada data untuk tahun ini</td></tr>`;
     el.tableInfo.textContent = 'Menampilkan 0 fokus';
     return;
   }
   el.targetTabel.innerHTML = rows.map((r, i) => {
     const realOut = selectedSem === 'I' ? r.r1Out : r.r2Out;
     const realAng = selectedSem === 'I' ? r.r1Ang : r.r2Ang;
+    const ddCell = (ddButton(r.dd1, 'Sem I') + ' ' + ddButton(r.dd2, 'Sem II')).trim()
+      || '<span class="text-slate-300">-</span>';
     const zebra = i % 2 === 1 ? 'bg-slate-50/60' : '';
     return `<tr class="${zebra} hover:bg-surface-low/50 transition-colors">
       <td class="px-6 py-4 text-on-surface text-xs font-medium">${escapeHtml(r.fokus)}</td>
@@ -261,10 +273,20 @@ function renderTargetTable(rows) {
       <td class="px-4 py-4 text-center" style="white-space:nowrap">${cellRp(r.tAng)}</td>
       <td class="px-4 py-4 text-center" style="white-space:nowrap">${cellNum(realOut)}</td>
       <td class="px-4 py-4 text-center" style="white-space:nowrap">${cellRp(realAng)}</td>
+      <td class="px-4 py-4 text-center" style="white-space:nowrap">${ddCell}</td>
     </tr>`;
   }).join('');
   el.tableInfo.textContent = `Menampilkan ${rows.length} fokus prioritas · Tahun ${selectedYear} · Semester ${selectedSem}`;
 }
+
+// Buka link data dukung di browser eksternal
+el.targetTabel.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-dd]');
+  if (!btn) return;
+  const url = btn.getAttribute('data-dd');
+  if (window.electronAPI && window.electronAPI.openExternal) window.electronAPI.openExternal(url);
+  else window.open(url, '_blank');
+});
 
 function renderCatatanTable(rows) {
   if (!rows.length) {
