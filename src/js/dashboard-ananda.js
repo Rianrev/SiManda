@@ -81,6 +81,7 @@ const el = {
   cardRealisasiPct:   document.getElementById('cardRealisasiPct'),
   targetTabel:        document.getElementById('targetTabel'),
   catatanTabel:       document.getElementById('catatanTabel'),
+  catatanTitle:       document.getElementById('catatanTitle'),
   tableInfo:          document.getElementById('tableInfo'),
   chartInner:         document.getElementById('chartInner'),
   anggaranChart:      document.getElementById('anggaranChart'),
@@ -264,8 +265,10 @@ function renderTargetTable(rows) {
   el.targetTabel.innerHTML = rows.map((r, i) => {
     const realOut = selectedSem === 'I' ? r.r1Out : r.r2Out;
     const realAng = selectedSem === 'I' ? r.r1Ang : r.r2Ang;
-    const ddCell = (ddButton(r.dd1, 'Sem I') + ' ' + ddButton(r.dd2, 'Sem II')).trim()
-      || '<span class="text-slate-300">-</span>';
+    const ddBtns = [ddButton(r.dd1, 'Sem I'), ddButton(r.dd2, 'Sem II')].filter(Boolean);
+    const ddCell = ddBtns.length
+      ? `<div class="inline-flex flex-col items-stretch gap-1.5">${ddBtns.join('')}</div>`
+      : '<span class="text-slate-300">-</span>';
     const zebra = i % 2 === 1 ? 'bg-slate-50/60' : '';
     return `<tr class="${zebra} hover:bg-surface-low/50 transition-colors">
       <td class="px-6 py-4 text-on-surface text-xs font-medium">${escapeHtml(r.fokus)}</td>
@@ -289,6 +292,7 @@ el.targetTabel.addEventListener('click', (e) => {
 });
 
 function renderCatatanTable(rows) {
+  el.catatanTitle.textContent = `Hambatan & Pendukung — Semester ${selectedSem}`;
   if (!rows.length) {
     el.catatanTabel.innerHTML = `<tr><td colspan="3" class="py-10 text-center text-on-variant text-sm">Belum ada data</td></tr>`;
     return;
