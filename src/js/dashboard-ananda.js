@@ -75,6 +75,7 @@ const el = {
   errorState:         document.getElementById('errorState'),
   dashboardContent:   document.getElementById('dashboardContent'),
   cardTargetOutput:   document.getElementById('cardTargetOutput'),
+  cardRealisasiOut:   document.getElementById('cardRealisasiOut'),
   cardTargetAnggaran: document.getElementById('cardTargetAnggaran'),
   cardRealisasiAng:   document.getElementById('cardRealisasiAng'),
   cardRealisasiPct:   document.getElementById('cardRealisasiPct'),
@@ -231,9 +232,11 @@ function updateMetrics(rows) {
   const sum = k => rows.reduce((a, r) => a + r[k], 0);
   const tOut = sum('tOut');
   const tAng = sum('tAng');
+  const realOut = sum('r1Out') + sum('r2Out');
   const realAng = sum('r1Ang') + sum('r2Ang');
   const pct = tAng > 0 ? Math.round((realAng / tAng) * 100) : 0;
   el.cardTargetOutput.textContent   = fmtNum(tOut);
+  el.cardRealisasiOut.textContent   = fmtNum(realOut);
   el.cardTargetAnggaran.textContent = fmtRupiahFull(tAng);
   el.cardRealisasiAng.textContent   = fmtRupiahFull(realAng);
   el.cardRealisasiPct.textContent   = pct + '%';
