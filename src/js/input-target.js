@@ -105,7 +105,7 @@ submitBtn.addEventListener('click', async () => {
       cols[COL.TAHUN]           = tahun
       updates.push({ row: existing.row, cols })
     } else {
-      const row = new Array(12).fill('')
+      const row = new Array(14).fill('')
       row[COL.NO - 1]              = i + 1
       row[COL.FOKUS - 1]          = fokus
       row[COL.TARGET_OUTPUT - 1]  = oVal

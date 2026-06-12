@@ -59,6 +59,31 @@ function showNoTarget() {
     '</div>'
 }
 
+function toNum(v) {
+  const n = Number(String(v == null ? '' : v).replace(/[^0-9.-]/g, ''))
+  return isNaN(n) ? 0 : n
+}
+
+// Baris "Tercapai: X / Y" (akumulasi Sem I + Sem II), update live
+function updateCardProgress(card) {
+  const tOut = Number(card.dataset.tout) || 0
+  const tAng = Number(card.dataset.tang) || 0
+  const oOut = Number(card.dataset.oout) || 0
+  const oAng = Number(card.dataset.oang) || 0
+  const thisOut = toNum(card.querySelector('[data-f="output"]').value)
+  const thisAng = parseRupiah(card.querySelector('[data-f="anggaran"]').value) || 0
+  const totOut = oOut + thisOut
+  const totAng = oAng + thisAng
+  const pct = tOut > 0 ? Math.round((totOut / tOut) * 100) : 0
+  const done = tOut > 0 && totOut >= tOut
+  const p = card.querySelector('[data-progress]')
+  if (!p) return
+  p.innerHTML =
+    `<span style="color:${done ? '#16a34a' : '#64748b'};">Tercapai: <b>${fmt(totOut)} / ${fmt(tOut)}</b> output (${pct}%)` +
+    ` · <b>Rp ${fmt(totAng)} / Rp ${fmt(tAng)}</b></span>` +
+    (done ? ' <b style="color:#16a34a;">✓</b>' : '')
+}
+
 function renderRows() {
   const sem = semesterSelect.value
   const rows = currentRows()
@@ -67,46 +92,72 @@ function renderRows() {
     return
   }
   rowsEl.innerHTML = rows.map(r => {
-    const out  = sem === 'I' ? r.values[COL.REAL1_OUTPUT - 1]  : r.values[COL.REAL2_OUTPUT - 1]
+    const out  = sem === 'I' ? r.values[COL.REAL1_OUTPUT - 1]   : r.values[COL.REAL2_OUTPUT - 1]
     const ang  = sem === 'I' ? r.values[COL.REAL1_ANGGARAN - 1] : r.values[COL.REAL2_ANGGARAN - 1]
-    const hamb = r.values[COL.HAMBATAN - 1] || ''
-    const pend = r.values[COL.PENDUKUNG - 1] || ''
+    const hamb = (sem === 'I' ? r.values[COL.HAMBATAN1 - 1]  : r.values[COL.HAMBATAN2 - 1])  || ''
+    const pend = (sem === 'I' ? r.values[COL.PENDUKUNG1 - 1] : r.values[COL.PENDUKUNG2 - 1]) || ''
+
+    const tOut = toNum(r.values[COL.TARGET_OUTPUT - 1])
+    const tAng = toNum(r.values[COL.TARGET_ANGGARAN - 1])
+    const semIOut  = toNum(r.values[COL.REAL1_OUTPUT - 1])
+    const otherOut = toNum(sem === 'I' ? r.values[COL.REAL2_OUTPUT - 1]   : r.values[COL.REAL1_OUTPUT - 1])
+    const otherAng = toNum(sem === 'I' ? r.values[COL.REAL2_ANGGARAN - 1] : r.values[COL.REAL1_ANGGARAN - 1])
+
+    // Sem II dikunci bila target sudah tercapai di Sem I
+    const locked = sem === 'II' && tOut > 0 && semIOut >= tOut
+    const dis = locked ? 'disabled' : ''
+    const inputCls = locked ? 'bg-slate-100 cursor-not-allowed text-slate-400' : 'text-slate-800'
+    const lockNote = locked
+      ? '<div style="display:flex;align-items:center;gap:6px;background:#dcfce7;border:1px solid #bbf7d0;color:#15803d;font-size:12px;border-radius:8px;padding:8px 10px;margin-bottom:12px;">✓ Target sudah tercapai di Semester I.</div>'
+      : ''
+
     return `
-      <div data-row="${r.row}" class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div data-row="${r.row}"${locked ? ' data-locked="1"' : ''} data-tout="${tOut}" data-tang="${tAng}" data-oout="${otherOut}" data-oang="${otherAng}" class="bg-white rounded-2xl border border-slate-200 p-5">
         <h3 class="text-slate-800 font-semibold text-sm mb-1">${escapeHtml(r.fokus)}</h3>
-        <p class="text-xs text-slate-500 mb-4">Target: <b class="text-slate-700">${fmt(r.values[COL.TARGET_OUTPUT - 1])}</b> output · <b class="text-slate-700">Rp ${fmt(r.values[COL.TARGET_ANGGARAN - 1])}</b></p>
+        <p class="text-xs text-slate-500 mb-1">Target: <b class="text-slate-700">${fmt(tOut)}</b> output · <b class="text-slate-700">Rp ${fmt(tAng)}</b></p>
+        <p data-progress class="text-xs mb-3"></p>
+        ${lockNote}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <div>
             <label class="block text-xs text-slate-500 mb-1">Realisasi Output</label>
-            <input type="number" min="0" data-f="output" value="${escapeHtml(out)}" placeholder="0"
-              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40">
+            <input type="number" min="0" data-f="output" ${dis} value="${escapeHtml(out)}" placeholder="0"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm ${inputCls} focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40">
           </div>
           <div>
             <label class="block text-xs text-slate-500 mb-1">Realisasi Anggaran (Rp)</label>
-            <input type="text" inputmode="numeric" data-f="anggaran" value="${escapeHtml(formatRupiah(ang))}" placeholder="0"
-              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40">
+            <input type="text" inputmode="numeric" data-f="anggaran" ${dis} value="${escapeHtml(formatRupiah(ang))}" placeholder="0"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm ${inputCls} focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40">
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs text-slate-500 mb-1">Hambatan</label>
-            <textarea data-f="hambatan" rows="4" placeholder="-"
-              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40 resize-none">${escapeHtml(hamb)}</textarea>
+            <textarea data-f="hambatan" rows="4" ${dis} placeholder="-"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm ${inputCls} focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40 resize-none">${escapeHtml(hamb)}</textarea>
           </div>
           <div>
             <label class="block text-xs text-slate-500 mb-1">Pendukung</label>
-            <textarea data-f="pendukung" rows="4" placeholder="-"
-              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40 resize-none">${escapeHtml(pend)}</textarea>
+            <textarea data-f="pendukung" rows="4" ${dis} placeholder="-"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm ${inputCls} focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/40 resize-none">${escapeHtml(pend)}</textarea>
           </div>
         </div>
       </div>
     `
   }).join('')
-  rowsEl.querySelectorAll('input[data-f="anggaran"]').forEach(attachRupiah)
+  rowsEl.querySelectorAll('input[data-f="anggaran"]:not([disabled])').forEach(attachRupiah)
+  rowsEl.querySelectorAll('[data-row]').forEach(updateCardProgress)
 }
 
 tahunSelect.addEventListener('change', renderRows)
 semesterSelect.addEventListener('change', renderRows)
+
+// Update progress "Tercapai" secara live saat mengetik
+rowsEl.addEventListener('input', e => {
+  if (e.target.matches('[data-f="output"], [data-f="anggaran"]')) {
+    const card = e.target.closest('[data-row]')
+    if (card) updateCardProgress(card)
+  }
+})
 
 async function init() {
   // Nama satker dari A1
@@ -151,6 +202,7 @@ submitBtn.addEventListener('click', async () => {
   const updates = []
 
   rowsEl.querySelectorAll('[data-row]').forEach(card => {
+    if (card.dataset.locked) return // Sem II terkunci (sudah tercapai di Sem I)
     const row  = Number(card.getAttribute('data-row'))
     const out  = card.querySelector('[data-f="output"]').value.trim()
     const ang  = card.querySelector('[data-f="anggaran"]').value.trim()
@@ -163,12 +215,14 @@ submitBtn.addEventListener('click', async () => {
     if (sem === 'I') {
       cols[COL.REAL1_OUTPUT]   = out === '' ? '' : Number(out)
       cols[COL.REAL1_ANGGARAN] = parseRupiah(ang)
+      cols[COL.HAMBATAN1]      = hamb
+      cols[COL.PENDUKUNG1]     = pend
     } else {
       cols[COL.REAL2_OUTPUT]   = out === '' ? '' : Number(out)
       cols[COL.REAL2_ANGGARAN] = parseRupiah(ang)
+      cols[COL.HAMBATAN2]      = hamb
+      cols[COL.PENDUKUNG2]     = pend
     }
-    cols[COL.HAMBATAN]  = hamb
-    cols[COL.PENDUKUNG] = pend
     updates.push({ row, cols })
   })
 

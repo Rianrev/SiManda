@@ -25,14 +25,13 @@ const FOKUS_PRIORITAS = [
   'Layanan Rehabilitasi',
 ]
 
-// Posisi kolom (1-based) sesuai struktur sheet A..L (12 kolom).
-// Realisasi Sem I & II kolom terpisah. Nama Satker diambil dari sel A1 (bukan SATKER_MAP).
+// Posisi kolom (1-based) sesuai struktur sheet A..N (14 kolom).
+// Hambatan & Pendukung terpisah per semester. Nama Satker dari sel A1.
 const COL = {
   NO: 1, SATKER: 2, FOKUS: 3,
   TARGET_OUTPUT: 4, TARGET_ANGGARAN: 5, TAHUN: 6,
-  REAL1_OUTPUT: 7, REAL1_ANGGARAN: 8,
-  REAL2_OUTPUT: 9, REAL2_ANGGARAN: 10,
-  HAMBATAN: 11, PENDUKUNG: 12,
+  REAL1_OUTPUT: 7,  REAL1_ANGGARAN: 8,  HAMBATAN1: 9,  PENDUKUNG1: 10,
+  REAL2_OUTPUT: 11, REAL2_ANGGARAN: 12, HAMBATAN2: 13, PENDUKUNG2: 14,
 }
 
 // ---- Format Rupiah untuk input anggaran ----

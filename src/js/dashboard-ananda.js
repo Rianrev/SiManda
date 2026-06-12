@@ -23,7 +23,7 @@ function activateSidebarLink() {
       } else if (currentPage === 'web-view.html') {
         if (u.searchParams.get('param1') === currentParams.get('param1')) { best = a; break; }
       } else { best = a; break; }
-    } catch(_) {}
+    } catch (_) {}
   }
   if (best) {
     best.classList.add('active');
@@ -66,36 +66,36 @@ document.getElementById('userBadge').textContent = _session.region === '*' ? 'Ma
 //  DOM ELEMENT CACHE
 // ============================================================
 const el = {
-  pageTitle:        document.getElementById('pageTitle'),
-  breadcrumbTitle:  document.getElementById('breadcrumbTitle'),
-  btnInput:         document.getElementById('btnInput'),
-  searchInput:      document.getElementById('searchInput'),
-  fokusFilter:      document.getElementById('fokusFilter'),
-  loadingState:     document.getElementById('loadingState'),
-  errorState:       document.getElementById('errorState'),
-  dashboardContent: document.getElementById('dashboardContent'),
-  cardTotalSatker:  document.getElementById('cardTotalSatker'),
-  cardTargetOutput: document.getElementById('cardTargetOutput'),
-  cardAnggaran:     document.getElementById('cardAnggaran'),
-  cardRealisasiPct: document.getElementById('cardRealisasiPct'),
-  satkerTabel:      document.getElementById('satkerTabel'),
-  tableInfo:        document.getElementById('tableInfo'),
-  chartInner:       document.getElementById('chartInner'),
-  anggaranChart:    document.getElementById('anggaranChart'),
-  outputChartInner: document.getElementById('outputChartInner'),
-  outputChart:      document.getElementById('outputChart'),
+  pageTitle:          document.getElementById('pageTitle'),
+  breadcrumbTitle:    document.getElementById('breadcrumbTitle'),
+  btnInput:           document.getElementById('btnInput'),
+  tahunFilter:        document.getElementById('tahunFilter'),
+  semesterFilter:     document.getElementById('semesterFilter'),
+  loadingState:       document.getElementById('loadingState'),
+  errorState:         document.getElementById('errorState'),
+  dashboardContent:   document.getElementById('dashboardContent'),
+  cardTargetOutput:   document.getElementById('cardTargetOutput'),
+  cardTargetAnggaran: document.getElementById('cardTargetAnggaran'),
+  cardRealisasiAng:   document.getElementById('cardRealisasiAng'),
+  cardRealisasiPct:   document.getElementById('cardRealisasiPct'),
+  targetTabel:        document.getElementById('targetTabel'),
+  catatanTabel:       document.getElementById('catatanTabel'),
+  tableInfo:          document.getElementById('tableInfo'),
+  chartInner:         document.getElementById('chartInner'),
+  anggaranChart:      document.getElementById('anggaranChart'),
+  outputChartInner:   document.getElementById('outputChartInner'),
+  outputChart:        document.getElementById('outputChart'),
 };
 
 // ============================================================
 //  URL PARAMS & PAGE TITLE
 // ============================================================
 const urlParams  = new URLSearchParams(window.location.search);
-const sheetId    = urlParams.get('sheetId');
 const sheetTitle = urlParams.get('title') || 'Dashboard';
-const sheetUrl   = urlParams.get('sheetUrl');
 
 el.pageTitle.textContent       = 'Dashboard ' + sheetTitle;
 el.breadcrumbTitle.textContent = sheetTitle;
+
 // ============================================================
 //  POPUP INPUT (Target / Realisasi)
 // ============================================================
@@ -147,34 +147,12 @@ function openInputPopup() {
 }
 
 // ============================================================
-//  FORMATTING & HTML HELPERS
+//  HELPERS
 // ============================================================
-function parseCSV(text) {
-  const rows = [];
-  for (const line of text.split('\n')) {
-    if (!line.trim()) continue;
-    const cols = [];
-    let cur = '', q = false;
-    for (const ch of line) {
-      if (ch === '"') q = !q;
-      else if (ch === ',' && !q) { cols.push(cur.trim()); cur = ''; }
-      else cur += ch;
-    }
-    cols.push(cur.trim());
-    rows.push(cols);
-  }
-  return rows;
-}
-
 function parseNum(val) {
   if (!val) return 0;
+  if (typeof val === 'number') return val;
   let s = String(val).replace(/[Rp\s]/gi, '').trim();
-  if (/[jJ][tT]$/.test(s))
-    return parseFloat(s.replace(/[jJ][tT]$/, '').replace(/\./g, '').replace(',', '.')) * 1_000_000 || 0;
-  if (/[mM]$/.test(s))
-    return parseFloat(s.replace(/[mM]$/, '').replace(/\./g, '').replace(',', '.')) * 1_000_000 || 0;
-  if (/[kK]$/.test(s))
-    return parseFloat(s.replace(/[kK]$/, '').replace(/\./g, '').replace(',', '.')) * 1_000 || 0;
   return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
 }
 
@@ -182,338 +160,246 @@ function fmtJt(n) {
   const jt = n / 1_000_000;
   return (jt % 1 === 0 ? jt : parseFloat(jt.toFixed(2)).toString());
 }
-
 function fmtRupiah(n) {
   if (!n) return '-';
-  if (n >= 1_000_000_000) return 'Rp ' + (n / 1_000_000_000).toFixed(1).replace('.0', '') + ' M';
-  if (n >= 1_000_000)     return 'Rp ' + fmtJt(n) + ' Jt';
-  if (n >= 1_000)         return 'Rp ' + Math.round(n / 1_000) + ' Rb';
+  if (n >= 1_000_000_000_000) return 'Rp ' + (n / 1_000_000_000_000).toFixed(1).replace('.0', '') + ' T';
+  if (n >= 1_000_000_000)     return 'Rp ' + (n / 1_000_000_000).toFixed(1).replace('.0', '') + ' M';
+  if (n >= 1_000_000)         return 'Rp ' + fmtJt(n) + ' Jt';
+  if (n >= 1_000)             return 'Rp ' + Math.round(n / 1_000) + ' Rb';
   return 'Rp ' + n;
 }
-
 function fmtRupiahShort(n) {
   if (!n) return '-';
-  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace('.0', '') + 'M';
-  if (n >= 1_000_000)     return fmtJt(n) + 'Jt';
+  if (n >= 1_000_000_000_000) return (n / 1_000_000_000_000).toFixed(1).replace('.0', '') + 'T';
+  if (n >= 1_000_000_000)     return (n / 1_000_000_000).toFixed(1).replace('.0', '') + 'M';
+  if (n >= 1_000_000)         return fmtJt(n) + 'Jt';
   return String(n);
 }
-
+function fmtRupiahFull(n) { return n ? 'Rp ' + Number(n).toLocaleString('id-ID') : '-'; }
+function fmtNum(n) { return n ? Number(n).toLocaleString('id-ID') : '-'; }
 function escapeHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // ============================================================
-//  DATA PARSING
+//  DATA (satu satker, banyak fokus / tahun)
 // ============================================================
-function parseSatkerData(rows) {
-  let dataStart = -1;
-  for (let i = 0; i < rows.length; i++) {
-    const r = rows[i];
-    if (/^\d+$/.test((r[0] || '').trim()) && parseInt(r[0]) >= 1) {
-      if (/^\d+$/.test((r[1] || '').trim())) continue;
-      dataStart = i; break;
-    }
-  }
-  if (dataStart < 0) return [];
+let allRows = [];
+let selectedYear = null;
+let selectedSem = 'I';
 
-  const list = [];
-  let cur = null;
-  for (let i = dataStart; i < rows.length; i++) {
-    const row  = rows[i];
-    const noV  = (row[0] || '').trim();
-    const satV = (row[1] || '').trim();
-    const fokV = (row[2] || '').trim();
-
-    if (/^\d+$/.test(noV) && parseInt(noV) >= 1) {
-      cur = { no: noV, satker: satV, fokusData: [] };
-      list.push(cur);
-    }
-    if (cur && fokV) {
-      cur.fokusData.push({
-        fokus:          fokV,
-        targetOutput:   parseNum(row[3]),
-        satuan:         (row[4] || '').trim(),
-        targetAnggaran: parseNum(row[5]),
-        realOutput:     parseNum(row[6]),
-        realAnggaran:   parseNum(row[8]),
-      });
-    }
-  }
-  return list;
-}
-
-function collectFokus(list) {
-  const seen = new Set(), arr = [];
-  for (const s of list) for (const f of s.fokusData) {
-    if (!seen.has(f.fokus)) { seen.add(f.fokus); arr.push(f.fokus); }
-  }
-  return arr;
-}
-
-// ============================================================
-//  STATE
-// ============================================================
-const ALL_FOKUS = '__all__';
-let allSatker       = [];
-let allFokusOptions = [];
-let selectedFokus   = ALL_FOKUS;
-let chartOutput     = null;
-let chartAnggaran   = null;
-
-function relevantFokus(s) {
-  return selectedFokus === ALL_FOKUS
-    ? s.fokusData
-    : s.fokusData.filter(f => f.fokus === selectedFokus);
-}
-
-// ============================================================
-//  DATA PROJECTION
-// ============================================================
-function projectList() {
-  if (selectedFokus === ALL_FOKUS) {
-    const result = [];
-    for (const s of allSatker) {
-      if (!s.fokusData.length) {
-        result.push({
-          no: s.no, satker: s.satker, fokus: '-',
-          targetOutput: 0, satuan: '', targetAnggaran: 0, realOutput: 0, realAnggaran: 0,
-          hasData: false, isFirstFokus: true, fokusCount: 1,
-        });
-        continue;
-      }
-      s.fokusData.forEach((f, fi) => result.push({
-        no: s.no, satker: s.satker, fokus: f.fokus,
-        targetOutput: f.targetOutput, satuan: f.satuan, targetAnggaran: f.targetAnggaran,
-        realOutput:   f.realOutput,   realAnggaran:   f.realAnggaran,
-        hasData: true, isFirstFokus: fi === 0, fokusCount: s.fokusData.length,
-      }));
-    }
-    return result;
-  }
-  return allSatker.map(s => {
-    const rows = s.fokusData.filter(f => f.fokus === selectedFokus);
-    const sum  = key => rows.reduce((a, r) => a + r[key], 0);
-    const satuan = (rows.find(r => r.satuan) || {}).satuan || '';
-    return {
-      no: s.no, satker: s.satker, fokus: selectedFokus,
-      targetOutput: sum('targetOutput'), satuan, targetAnggaran: sum('targetAnggaran'),
-      realOutput:   sum('realOutput'),   realAnggaran:   sum('realAnggaran'),
-      hasData: rows.length > 0, isFirstFokus: true, fokusCount: 1,
-    };
-  });
-}
-
-function chartList(q) {
-  return allSatker
-    .filter(s => !q || s.satker === q)
-    .map(s => {
-      const rows = relevantFokus(s);
-      const sum  = key => rows.reduce((a, r) => a + r[key], 0);
-      return {
-        satker: s.satker,
-        targetOutput: sum('targetOutput'), targetAnggaran: sum('targetAnggaran'),
-        realOutput:   sum('realOutput'),   realAnggaran:   sum('realAnggaran'),
-      };
+function parseRows(rows) {
+  const out = [];
+  for (const r of rows) {
+    const v = r.values || [];
+    const fokus = String(v[COL.FOKUS - 1] || '').trim();
+    const tahun = parseNum(v[COL.TAHUN - 1]);
+    if (!fokus || tahun < 2000) continue;
+    out.push({
+      fokus, tahun,
+      tOut:  parseNum(v[COL.TARGET_OUTPUT - 1]),
+      tAng:  parseNum(v[COL.TARGET_ANGGARAN - 1]),
+      r1Out: parseNum(v[COL.REAL1_OUTPUT - 1]),
+      r1Ang: parseNum(v[COL.REAL1_ANGGARAN - 1]),
+      r2Out: parseNum(v[COL.REAL2_OUTPUT - 1]),
+      r2Ang: parseNum(v[COL.REAL2_ANGGARAN - 1]),
+      hamb1: String(v[COL.HAMBATAN1 - 1] || '').trim(),
+      pend1: String(v[COL.PENDUKUNG1 - 1] || '').trim(),
+      hamb2: String(v[COL.HAMBATAN2 - 1] || '').trim(),
+      pend2: String(v[COL.PENDUKUNG2 - 1] || '').trim(),
     });
-}
-
-// ============================================================
-//  RENDERING
-// ============================================================
-function populateSatkerSelect() {
-  const opts = ['<option value="">Semua Satker</option>']
-    .concat(allSatker.map(s => `<option value="${escapeHtml(s.satker)}">${escapeHtml(s.satker)}</option>`));
-  el.searchInput.innerHTML = opts.join('');
-  el.searchInput.value = '';
-}
-
-function populateFokusSelect() {
-  const opts = [`<option value="${ALL_FOKUS}">Semua Fokus Prioritas</option>`]
-    .concat(allFokusOptions.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`));
-  el.fokusFilter.innerHTML = opts.join('');
-  selectedFokus = ALL_FOKUS;
-  el.fokusFilter.value = ALL_FOKUS;
-}
-
-function updateMetrics(list) {
-  const satkerNos = new Set(list.map(s => s.no));
-  let tarOut = 0, tarAng = 0, realOut = 0;
-  for (const s of allSatker) {
-    if (!satkerNos.has(s.no)) continue;
-    for (const f of relevantFokus(s)) {
-      tarOut  += f.targetOutput;
-      tarAng  += f.targetAnggaran;
-      realOut += f.realOutput;
-    }
   }
-  const pct = tarOut > 0 ? Math.round((realOut / tarOut) * 100) : 0;
-  el.cardTotalSatker.textContent  = satkerNos.size;
-  el.cardTargetOutput.textContent = tarOut || '-';
-  el.cardAnggaran.textContent     = fmtRupiah(tarAng);
-  el.cardRealisasiPct.textContent = pct + '%';
+  return out;
 }
 
-function renderTable(list) {
-  if (!list.length) {
-    el.satkerTabel.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-on-variant text-sm">Tidak ada data</td></tr>`;
-    el.tableInfo.textContent = 'Menampilkan 0 satker';
+function currentRows() {
+  return allRows.filter(r => r.tahun === selectedYear);
+}
+
+// ============================================================
+//  RENDER
+// ============================================================
+function populateTahun() {
+  const years = [...new Set(allRows.map(r => r.tahun))].sort((a, b) => b - a);
+  if (!years.length) years.push(TAHUN_BERJALAN);
+  el.tahunFilter.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+  selectedYear = years.includes(TAHUN_BERJALAN) ? TAHUN_BERJALAN : years[0];
+  el.tahunFilter.value = String(selectedYear);
+}
+
+function updateMetrics(rows) {
+  const sum = k => rows.reduce((a, r) => a + r[k], 0);
+  const tOut = sum('tOut');
+  const tAng = sum('tAng');
+  const realAng = sum('r1Ang') + sum('r2Ang');
+  const pct = tAng > 0 ? Math.round((realAng / tAng) * 100) : 0;
+  el.cardTargetOutput.textContent   = fmtNum(tOut);
+  el.cardTargetAnggaran.textContent = fmtRupiahFull(tAng);
+  el.cardRealisasiAng.textContent   = fmtRupiahFull(realAng);
+  el.cardRealisasiPct.textContent   = pct + '%';
+}
+
+function cellNum(v) { return v ? `<span class="font-medium">${fmtNum(v)}</span>` : '<span class="text-slate-300">-</span>'; }
+function cellRp(v)  { return v ? `<span class="text-on-variant">${fmtRupiahFull(v)}</span>` : '<span class="text-slate-300">-</span>'; }
+
+function renderTargetTable(rows) {
+  if (!rows.length) {
+    el.targetTabel.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-on-variant text-sm">Belum ada data untuk tahun ini</td></tr>`;
+    el.tableInfo.textContent = 'Menampilkan 0 fokus';
     return;
   }
-
-  let groupIdx = -1, lastNo = null;
-  el.satkerTabel.innerHTML = list.map(s => {
-    if (s.no !== lastNo) { groupIdx++; lastNo = s.no; }
-    const zebra   = groupIdx % 2 === 1 ? 'bg-slate-50/60' : '';
-    const satuan  = s.satuan ? ' ' + escapeHtml(s.satuan) : '';
-    const realOut = s.realOutput   ? `<span class="text-secondary font-semibold">${s.realOutput}${satuan}</span>`  : `<span class="text-slate-300">-</span>`;
-    const realAng = s.realAnggaran ? `<span class="text-on-variant">${fmtRupiah(s.realAnggaran)}</span>` : `<span class="text-slate-300">-</span>`;
-    const tarOut  = s.targetOutput ? `${s.targetOutput}${satuan}` : '-';
-    const tarAng  = s.targetAnggaran ? fmtRupiah(s.targetAnggaran) : '-';
-    const fokus   = s.hasData ? escapeHtml(s.fokus) : `<span class="text-slate-300 italic">tidak tersedia</span>`;
-
-    const rowspan    = s.fokusCount > 1 ? ` rowspan="${s.fokusCount}"` : '';
-    const borderTop  = s.isFirstFokus ? 'border-t border-slate-200' : '';
-    const groupCells = s.isFirstFokus
-      ? `<td class="px-6 py-4 text-on-variant align-top border-t border-slate-200"${rowspan}>${s.no}</td>
-         <td class="px-6 py-4 font-medium text-on-surface align-top border-t border-slate-200"${rowspan}>${escapeHtml(s.satker || '-')}</td>`
-      : '';
-
+  el.targetTabel.innerHTML = rows.map((r, i) => {
+    const realOut = selectedSem === 'I' ? r.r1Out : r.r2Out;
+    const realAng = selectedSem === 'I' ? r.r1Ang : r.r2Ang;
+    const zebra = i % 2 === 1 ? 'bg-slate-50/60' : '';
     return `<tr class="${zebra} hover:bg-surface-low/50 transition-colors">
-      ${groupCells}
-      <td class="px-6 py-4 text-on-variant text-xs ${borderTop}">${fokus}</td>
-      <td class="px-4 py-4 text-center font-medium ${borderTop}">${tarOut}</td>
-      <td class="px-4 py-4 text-center text-on-variant ${borderTop}">${tarAng}</td>
-      <td class="px-4 py-4 text-center ${borderTop}">${realOut}</td>
-      <td class="px-4 py-4 text-center ${borderTop}">${realAng}</td>
+      <td class="px-6 py-4 text-on-surface text-xs font-medium">${escapeHtml(r.fokus)}</td>
+      <td class="px-4 py-4 text-center" style="white-space:nowrap">${cellNum(r.tOut)}</td>
+      <td class="px-4 py-4 text-center" style="white-space:nowrap">${cellRp(r.tAng)}</td>
+      <td class="px-4 py-4 text-center" style="white-space:nowrap">${cellNum(realOut)}</td>
+      <td class="px-4 py-4 text-center" style="white-space:nowrap">${cellRp(realAng)}</td>
     </tr>`;
   }).join('');
-
-  const satkerCount = new Set(list.map(s => s.no)).size;
-  el.tableInfo.textContent = `Menampilkan ${satkerCount} satker` +
-    (selectedFokus === ALL_FOKUS ? `, ${list.length} baris fokus` : '') +
-    ` dari ${allSatker.length} total satker`;
+  el.tableInfo.textContent = `Menampilkan ${rows.length} fokus prioritas · Tahun ${selectedYear} · Semester ${selectedSem}`;
 }
 
-function makeBarChart({ canvas, inner, labels, target, real, color, targetLabel, realLabel, fmtValue, prev }) {
-  const minPx = 60;
-  inner.style.minWidth = Math.max(400, labels.length * minPx * 2 + 100) + 'px';
-  if (prev) prev.destroy();
+function renderCatatanTable(rows) {
+  if (!rows.length) {
+    el.catatanTabel.innerHTML = `<tr><td colspan="3" class="py-10 text-center text-on-variant text-sm">Belum ada data</td></tr>`;
+    return;
+  }
+  const cell = t => t ? escapeHtml(t) : '<span class="text-slate-300">-</span>';
+  el.catatanTabel.innerHTML = rows.map((r, i) => {
+    const hamb = selectedSem === 'I' ? r.hamb1 : r.hamb2;
+    const pend = selectedSem === 'I' ? r.pend1 : r.pend2;
+    const zebra = i % 2 === 1 ? 'bg-slate-50/60' : '';
+    return `<tr class="${zebra} hover:bg-surface-low/50 transition-colors align-top">
+      <td class="px-6 py-4 text-on-surface text-xs font-medium">${escapeHtml(r.fokus)}</td>
+      <td class="px-6 py-4 text-on-variant text-xs leading-relaxed">${cell(hamb)}</td>
+      <td class="px-6 py-4 text-on-variant text-xs leading-relaxed">${cell(pend)}</td>
+    </tr>`;
+  }).join('');
+}
 
+// ============================================================
+//  CHARTS (per Fokus Prioritas: Target / Sem I / Sem II)
+// ============================================================
+let chartOutput = null, chartAnggaran = null;
+
+function makeBarChart({ canvas, inner, labels, fullLabels, datasets, fmtValue, prev }) {
+  // Canvas mengisi container (lebar penuh); melebar + scroll hanya bila fokus banyak
+  inner.style.width = 'auto';
+  inner.style.minWidth = Math.max(640, labels.length * 120) + 'px';
+  inner.style.height = '400px';
+  if (prev) prev.destroy();
   return new Chart(canvas, {
     type: 'bar',
     data: {
       labels,
-      datasets: [
-        { label: targetLabel, data: target, backgroundColor: '#cbd5e1', borderRadius: 5, barThickness: minPx - 12 },
-        { label: realLabel,   data: real,   backgroundColor: color,    borderRadius: 5, barThickness: minPx - 12 },
-      ],
+      datasets: datasets.map(d => ({
+        label: d.label, data: d.data, backgroundColor: d.color, borderRadius: 5, maxBarThickness: 46,
+      })),
     },
     options: {
-      layout: { padding: { top: 24 } },
+      responsive: true,
+      maintainAspectRatio: false,
+      categoryPercentage: 0.85,
+      barPercentage: 0.92,
+      interaction: { mode: 'index', intersect: false },
+      layout: { padding: { top: 20 } },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtValue(ctx.raw)}` } },
+        tooltip: {
+          backgroundColor: '#0f2744',
+          padding: 10,
+          titleColor: '#fff',
+          bodyColor: '#e2e8f0',
+          callbacks: {
+            title: items => (fullLabels && items.length) ? fullLabels[items[0].dataIndex] : '',
+            label: ctx => ` ${ctx.dataset.label}: ${fmtValue(ctx.raw)}`,
+          },
+        },
       },
       scales: {
         y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { color: '#64748b', callback: v => fmtValue(v) } },
-        x: { grid: { display: false }, ticks: { color: '#64748b', maxRotation: 35, minRotation: 20 } },
+        x: { grid: { display: false }, ticks: { color: '#64748b', maxRotation: 35, minRotation: 20, font: { size: 10 } } },
       },
     },
-    plugins: [{
-      id: 'barLabel',
-      afterDatasetsDraw(chart) {
-        const { ctx, data } = chart;
-        data.datasets.forEach((ds, di) => {
-          chart.getDatasetMeta(di).data.forEach((bar, idx) => {
-            const v = ds.data[idx]; if (!v) return;
-            ctx.save();
-            ctx.font = 'bold 10px Inter, sans-serif';
-            ctx.fillStyle = di === 0 ? '#94a3b8' : color;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-            ctx.fillText(fmtValue(v), bar.x, bar.y - 3);
-            ctx.restore();
-          });
-        });
-      },
-    }],
   });
 }
 
-function buildCharts(list) {
-  const labels = list.map(s => s.satker.replace(/^BNNP?\s*/i, '').replace(/^BNNK?\s*/i, ''));
+function shortFokus(f) {
+  return f.length > 24 ? f.slice(0, 22) + '…' : f;
+}
 
+function buildCharts(rows) {
+  const labels = rows.map(r => shortFokus(r.fokus));
+  const fullLabels = rows.map(r => r.fokus);
   chartOutput = makeBarChart({
-    canvas:      el.outputChart,
-    inner:       el.outputChartInner,
-    labels,
-    target:      list.map(s => s.targetOutput),
-    real:        list.map(s => s.realOutput),
-    color:       '#059669',
-    targetLabel: 'Target Output',
-    realLabel:   'Realisasi Output',
-    fmtValue:    v => String(v),
-    prev:        chartOutput,
+    canvas: el.outputChart, inner: el.outputChartInner, labels, fullLabels,
+    datasets: [
+      { label: 'Target',       data: rows.map(r => r.tOut),  color: '#cbd5e1' },
+      { label: 'Real. Sem I',  data: rows.map(r => r.r1Out), color: '#059669' },
+      { label: 'Real. Sem II', data: rows.map(r => r.r2Out), color: '#4f46e5' },
+    ],
+    fmtValue: v => String(v), prev: chartOutput,
   });
-
   chartAnggaran = makeBarChart({
-    canvas:      el.anggaranChart,
-    inner:       el.chartInner,
-    labels,
-    target:      list.map(s => s.targetAnggaran),
-    real:        list.map(s => s.realAnggaran),
-    color:       '#4f46e5',
-    targetLabel: 'Target Anggaran',
-    realLabel:   'Realisasi Anggaran',
-    fmtValue:    v => fmtRupiahShort(v),
-    prev:        chartAnggaran,
+    canvas: el.anggaranChart, inner: el.chartInner, labels, fullLabels,
+    datasets: [
+      { label: 'Target',       data: rows.map(r => r.tAng),  color: '#cbd5e1' },
+      { label: 'Real. Sem I',  data: rows.map(r => r.r1Ang), color: '#059669' },
+      { label: 'Real. Sem II', data: rows.map(r => r.r2Ang), color: '#4f46e5' },
+    ],
+    fmtValue: v => fmtRupiahShort(v), prev: chartAnggaran,
   });
 }
 
 // ============================================================
-//  FILTER / EVENTS
+//  RENDER ALL / FILTER
 // ============================================================
 function applyFilters() {
-  const q         = el.searchInput.value;
-  const projected = projectList();
-  const filtered  = !q ? projected : projected.filter(s => s.satker === q);
-  renderTable(filtered);
-  updateMetrics(filtered);
-  buildCharts(chartList(q));
+  const rows = currentRows();
+  updateMetrics(rows);
+  renderTargetTable(rows);
+  renderCatatanTable(rows);
+  buildCharts(rows);
 }
 
-el.searchInput.addEventListener('change', applyFilters);
-el.fokusFilter.addEventListener('change', e => {
-  selectedFokus = e.target.value;
+el.tahunFilter.addEventListener('change', e => {
+  selectedYear = Number(e.target.value);
+  applyFilters();
+});
+el.semesterFilter.addEventListener('change', e => {
+  selectedSem = e.target.value;
   applyFilters();
 });
 
 // ============================================================
 //  BOOTSTRAP
 // ============================================================
-function showError() {
+function showError(msg) {
   el.loadingState.classList.add('hidden');
   el.errorState.classList.remove('hidden');
   el.errorState.classList.add('flex');
+  if (msg) {
+    const p = el.errorState.querySelector('p.text-on-variant');
+    if (p) p.textContent = msg;
+  }
 }
 
 async function loadDashboard() {
-  if (!sheetId) return showError();
-  try {
-    const res = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`);
-    if (!res.ok) throw new Error('fetch failed');
-    const rows = parseCSV(await res.text());
-    allSatker       = parseSatkerData(rows);
-    allFokusOptions = collectFokus(allSatker);
-
-    el.loadingState.classList.add('hidden');
-    el.dashboardContent.classList.remove('hidden');
-
-    populateSatkerSelect();
-    populateFokusSelect();
-    applyFilters();
-  } catch (_) {
-    showError();
+  const res = await appsScriptRequest({ action: 'list', sheet: sheetTitle });
+  if (!res || !res.ok || !Array.isArray(res.rows)) {
+    return showError((res && res.error) || 'Periksa koneksi internet Anda');
   }
+  allRows = parseRows(res.rows);
+
+  el.loadingState.classList.add('hidden');
+  el.dashboardContent.classList.remove('hidden');
+
+  populateTahun();
+  applyFilters();
 }
 
 loadDashboard();

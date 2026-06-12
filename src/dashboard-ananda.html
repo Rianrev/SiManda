@@ -77,7 +77,7 @@
     <!-- Loading -->
     <div id="loadingState" class="flex flex-col items-center justify-center py-24 gap-4">
       <div class="w-10 h-10 border-4 border-navy-800 border-t-transparent rounded-full animate-spin"></div>
-      <span class="text-on-variant text-sm">Memuat data dari Google Sheet...</span>
+      <span class="text-on-variant text-sm">Memuat data</span>
     </div>
 
     <!-- Error -->
@@ -92,6 +92,14 @@
     <!-- Dashboard -->
     <div id="dashboardContent" class="hidden">
 
+      <!-- Filter Tahun -->
+      <div class="bg-surface-lowest rounded-2xl ambient-shadow p-4 mb-6 flex items-center gap-3">
+        <span class="material-symbols-outlined text-secondary">calendar_month</span>
+        <label class="text-sm font-medium text-on-variant">Tahun Anggaran</label>
+        <select id="tahunFilter"
+          class="pl-3 pr-8 py-2 bg-surface-lowest border border-slate-200 rounded-lg text-sm text-on-surface focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none cursor-pointer"></select>
+      </div>
+
       <!-- Metric Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
@@ -99,21 +107,8 @@
           <div class="absolute -right-4 -top-4 w-24 h-24 bg-surface-low rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500"></div>
           <div class="flex items-start justify-between relative z-10">
             <div>
-              <p class="text-sm text-on-variant font-medium mb-1">Total Satker</p>
-              <h3 id="cardTotalSatker" class="font-headline text-3xl font-bold text-on-surface">0</h3>
-            </div>
-            <div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center text-primary-cnt shrink-0">
-              <span class="material-symbols-outlined">domain</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-surface-lowest rounded-2xl p-6 ambient-shadow relative overflow-hidden group">
-          <div class="absolute -right-4 -top-4 w-24 h-24 bg-surface-low rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500"></div>
-          <div class="flex items-start justify-between relative z-10">
-            <div>
               <p class="text-sm text-on-variant font-medium mb-1">Target Output</p>
-              <h3 id="cardTargetOutput" class="font-headline text-3xl font-bold text-on-surface">0</h3>
+              <h3 id="cardTargetOutput" class="font-headline text-3xl font-bold text-on-surface" style="white-space:nowrap">0</h3>
             </div>
             <div class="w-10 h-10 rounded-xl bg-secondary-fixed flex items-center justify-center text-secondary shrink-0">
               <span class="material-symbols-outlined">flag</span>
@@ -125,8 +120,8 @@
           <div class="absolute -right-4 -top-4 w-24 h-24 bg-surface-low rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500"></div>
           <div class="flex items-start justify-between relative z-10">
             <div>
-              <p class="text-sm text-on-variant font-medium mb-1">Anggaran Total</p>
-              <h3 id="cardAnggaran" class="font-headline text-2xl font-bold text-on-surface mt-1">-</h3>
+              <p class="text-sm text-on-variant font-medium mb-1">Target Anggaran</p>
+              <h3 id="cardTargetAnggaran" class="font-headline text-xl font-bold text-on-surface mt-1 leading-tight">-</h3>
             </div>
             <div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center text-primary-cnt shrink-0">
               <span class="material-symbols-outlined">payments</span>
@@ -135,11 +130,24 @@
         </div>
 
         <div class="bg-surface-lowest rounded-2xl p-6 ambient-shadow relative overflow-hidden group">
+          <div class="absolute -right-4 -top-4 w-24 h-24 bg-surface-low rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500"></div>
+          <div class="flex items-start justify-between relative z-10">
+            <div>
+              <p class="text-sm text-on-variant font-medium mb-1">Realisasi Anggaran</p>
+              <h3 id="cardRealisasiAng" class="font-headline text-xl font-bold text-on-surface mt-1 leading-tight">-</h3>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-700 shrink-0">
+              <span class="material-symbols-outlined">savings</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-surface-lowest rounded-2xl p-6 ambient-shadow relative overflow-hidden group">
           <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-secondary to-blue-400"></div>
           <div class="flex items-start justify-between relative z-10">
             <div>
-              <p class="text-sm text-on-variant font-medium mb-1">Rata-rata Realisasi</p>
-              <h3 id="cardRealisasiPct" class="font-headline text-3xl font-bold text-on-surface">0%</h3>
+              <p class="text-sm text-on-variant font-medium mb-1">% Realisasi Anggaran</p>
+              <h3 id="cardRealisasiPct" class="font-headline text-3xl font-bold text-on-surface" style="white-space:nowrap">0%</h3>
             </div>
             <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-700 shrink-0">
               <span class="material-symbols-outlined">trending_up</span>
@@ -155,7 +163,7 @@
         <!-- Bar Chart: Perbandingan Output Satker -->
         <div class="bg-surface-lowest rounded-2xl ambient-shadow p-6">
           <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
-            <h3 class="font-headline font-semibold text-lg text-on-surface">Perbandingan Output Satker</h3>
+            <h3 class="font-headline font-semibold text-lg text-on-surface">Output per Fokus Prioritas</h3>
             <div class="flex items-center gap-4 text-sm font-medium">
               <div class="flex items-center gap-2">
                 <div class="w-3 h-3 rounded-full bg-slate-300"></div>
@@ -163,7 +171,11 @@
               </div>
               <div class="flex items-center gap-2">
                 <div class="w-3 h-3 rounded-full bg-emerald-600"></div>
-                <span class="text-on-variant">Realisasi</span>
+                <span class="text-on-variant">Real. Sem I</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-full bg-indigo-600"></div>
+                <span class="text-on-variant">Real. Sem II</span>
               </div>
             </div>
           </div>
@@ -177,15 +189,19 @@
         <!-- Bar Chart: Perbandingan Anggaran Satker -->
         <div class="bg-surface-lowest rounded-2xl ambient-shadow p-6">
           <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
-            <h3 class="font-headline font-semibold text-lg text-on-surface">Perbandingan Anggaran Satker</h3>
+            <h3 class="font-headline font-semibold text-lg text-on-surface">Anggaran per Fokus Prioritas</h3>
             <div class="flex items-center gap-4 text-sm font-medium">
               <div class="flex items-center gap-2">
                 <div class="w-3 h-3 rounded-full bg-slate-300"></div>
                 <span class="text-on-variant">Target</span>
               </div>
               <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-full bg-emerald-600"></div>
+                <span class="text-on-variant">Real. Sem I</span>
+              </div>
+              <div class="flex items-center gap-2">
                 <div class="w-3 h-3 rounded-full bg-indigo-600"></div>
-                <span class="text-on-variant">Realisasi</span>
+                <span class="text-on-variant">Real. Sem II</span>
               </div>
             </div>
           </div>
@@ -198,58 +214,72 @@
 
       </div>
 
-      <!-- Data Table -->
-      <div class="bg-surface-lowest rounded-2xl ambient-shadow overflow-hidden">
-
-        <div class="bg-surface-high px-6 py-4 border-b border-slate-200/60">
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-3">
-            <h3 class="font-headline font-semibold text-lg text-on-surface">Data Realisasi Satker</h3>
-            <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-secondary text-base">domain</span>
-              <label class="text-xs font-semibold text-on-variant uppercase tracking-wide shrink-0">Satker:</label>
-              <select id="searchInput"
-                class="flex-1 min-w-0 pl-3 pr-8 py-2 bg-surface-lowest border border-slate-200 rounded-lg text-sm text-on-surface focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all outline-none cursor-pointer">
-                <option value="">Semua Satker</option>
-              </select>
-            </div>
-          </div>
+      <!-- Tabel 1: Target & Realisasi -->
+      <div class="bg-surface-lowest rounded-2xl ambient-shadow overflow-hidden mb-8">
+        <div class="bg-surface-high px-6 py-4 border-b border-slate-200/60 flex flex-wrap items-center justify-between gap-3">
+          <h3 class="font-headline font-semibold text-lg text-on-surface">Target &amp; Realisasi</h3>
           <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-secondary text-base">filter_alt</span>
-            <label for="fokusFilter" class="text-xs font-semibold text-on-variant uppercase tracking-wide shrink-0">Fokus Prioritas:</label>
-            <select id="fokusFilter"
-              class="flex-1 min-w-0 pl-3 pr-8 py-2 bg-surface-lowest border border-slate-200 rounded-lg text-sm text-on-surface focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all outline-none cursor-pointer">
+            <span class="material-symbols-outlined text-secondary text-base">date_range</span>
+            <label class="text-xs font-semibold text-on-variant uppercase tracking-wide">Semester</label>
+            <select id="semesterFilter"
+              class="pl-3 pr-8 py-2 bg-surface-lowest border border-slate-200 rounded-lg text-sm text-on-surface focus:ring-2 focus:ring-secondary/30 focus:border-secondary outline-none cursor-pointer">
+              <option value="I">Semester I</option>
+              <option value="II">Semester II</option>
             </select>
           </div>
         </div>
-
         <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+          <table class="w-full text-left border-collapse" style="table-layout:fixed;min-width:820px">
+            <colgroup>
+              <col style="width:30%">
+              <col style="width:10%">
+              <col style="width:25%">
+              <col style="width:10%">
+              <col style="width:25%">
+            </colgroup>
             <thead>
               <tr class="bg-surface-low text-on-variant text-xs uppercase tracking-wider font-semibold">
-                <th class="px-6 py-4 w-12">No</th>
-                <th class="px-6 py-4 min-w-[180px]">Satker</th>
-                <th class="px-6 py-4 min-w-[260px]">Fokus Prioritas</th>
-                <th class="px-4 py-4 text-center" colspan="2">Target</th>
-                <th class="px-4 py-4 text-center" colspan="2">Realisasi</th>
+                <th class="px-6 py-3" rowspan="2">Fokus Prioritas</th>
+                <th class="px-4 py-3 text-center" colspan="2">Target</th>
+                <th class="px-4 py-3 text-center" colspan="2">Realisasi</th>
               </tr>
-              <tr class="bg-surface-low text-on-variant text-xs uppercase tracking-wider font-semibold border-b border-slate-200/60">
-                <th class="px-6 pb-3"></th>
-                <th class="px-6 pb-3"></th>
-                <th class="px-6 pb-3"></th>
-                <th class="px-4 pb-3 text-center text-[10px]">Output</th>
-                <th class="px-4 pb-3 text-center text-[10px]">Anggaran</th>
-                <th class="px-4 pb-3 text-center text-[10px]">Output</th>
-                <th class="px-4 pb-3 text-center text-[10px]">Anggaran</th>
+              <tr class="bg-surface-low text-on-variant text-[10px] uppercase tracking-wider font-semibold border-b border-slate-200/60">
+                <th class="px-4 pb-3 text-center">Output</th>
+                <th class="px-4 pb-3 text-center">Anggaran</th>
+                <th class="px-4 pb-3 text-center">Output</th>
+                <th class="px-4 pb-3 text-center">Anggaran</th>
               </tr>
             </thead>
-            <tbody id="satkerTabel" class="text-sm divide-y divide-slate-100"></tbody>
+            <tbody id="targetTabel" class="text-sm divide-y divide-slate-100"></tbody>
           </table>
         </div>
-
-        <div class="px-6 py-4 border-t border-slate-200/60 flex items-center justify-between bg-surface-lowest">
-          <span id="tableInfo" class="text-xs text-on-variant">Menampilkan 0 satker</span>
+        <div class="px-6 py-4 border-t border-slate-200/60 bg-surface-lowest">
+          <span id="tableInfo" class="text-xs text-on-variant">Menampilkan 0 fokus</span>
         </div>
+      </div>
 
+      <!-- Tabel 2: Hambatan & Pendukung -->
+      <div class="bg-surface-lowest rounded-2xl ambient-shadow overflow-hidden">
+        <div class="bg-surface-high px-6 py-4 border-b border-slate-200/60">
+          <h3 class="font-headline font-semibold text-lg text-on-surface">Hambatan &amp; Pendukung</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse" style="table-layout:fixed;min-width:760px">
+            <colgroup>
+              <col style="width:22%">
+              <col style="width:39%">
+              <col style="width:39%">
+            </colgroup>
+            <thead>
+              <tr class="bg-surface-low text-on-variant text-xs uppercase tracking-wider font-semibold border-b border-slate-200/60">
+                <th class="px-6 py-3">Fokus Prioritas</th>
+                <th class="px-6 py-3">Hambatan</th>
+                <th class="px-6 py-3">Pendukung</th>
+              </tr>
+            </thead>
+            <tbody id="catatanTabel" class="text-sm divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
       </div>
 
     </div>
