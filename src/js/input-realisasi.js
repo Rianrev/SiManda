@@ -112,7 +112,7 @@ function renderRows() {
       : ''
 
     return `
-      <div data-row="${r.row}"${locked ? ' data-locked="1"' : ''} data-tout="${tOut}" data-tang="${tAng}" data-oout="${otherOut}" data-oang="${otherAng}" class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div data-row="${r.row}" data-fokus="${escapeHtml(r.fokus)}"${locked ? ' data-locked="1"' : ''} data-tout="${tOut}" data-tang="${tAng}" data-oout="${otherOut}" data-oang="${otherAng}" class="bg-white rounded-2xl border border-slate-200 p-5">
         <h3 class="text-slate-800 font-semibold text-sm mb-1">${escapeHtml(r.fokus)}</h3>
         <p class="text-xs text-slate-500 mb-1">Target: <b class="text-slate-700">${fmt(tOut)}</b> output · <b class="text-slate-700">Rp ${fmt(tAng)}</b></p>
         <p data-progress class="text-xs mb-3"></p>
@@ -199,11 +199,13 @@ async function init() {
 
 submitBtn.addEventListener('click', async () => {
   const sem = semesterSelect.value
-  const updates = []
+  const tahun = Number(tahunSelect.value)
 
+  // Server mencari baris via (fokus, tahun) — bukan nomor baris dari halaman ini,
+  // yang bisa bergeser bila ada baris baru/terhapus sejak halaman dimuat.
+  const items = []
   rowsEl.querySelectorAll('[data-row]').forEach(card => {
     if (card.dataset.locked) return // Sem II terkunci (sudah tercapai di Sem I)
-    const row  = Number(card.getAttribute('data-row'))
     const out  = card.querySelector('[data-f="output"]').value.trim()
     const ang  = card.querySelector('[data-f="anggaran"]').value.trim()
     const hamb = card.querySelector('[data-f="hambatan"]').value.trim()
@@ -211,27 +213,21 @@ submitBtn.addEventListener('click', async () => {
 
     if (out === '' && ang === '' && hamb === '' && pend === '') return // lewati card kosong
 
-    const cols = {}
-    if (sem === 'I') {
-      cols[COL.REAL1_OUTPUT]   = out === '' ? '' : Number(out)
-      cols[COL.REAL1_ANGGARAN] = parseRupiah(ang)
-      cols[COL.HAMBATAN1]      = hamb
-      cols[COL.PENDUKUNG1]     = pend
-    } else {
-      cols[COL.REAL2_OUTPUT]   = out === '' ? '' : Number(out)
-      cols[COL.REAL2_ANGGARAN] = parseRupiah(ang)
-      cols[COL.HAMBATAN2]      = hamb
-      cols[COL.PENDUKUNG2]     = pend
-    }
-    updates.push({ row, cols })
+    items.push({
+      fokus:     card.getAttribute('data-fokus'),
+      output:    out === '' ? '' : Number(out),
+      anggaran:  parseRupiah(ang),
+      hambatan:  hamb,
+      pendukung: pend,
+    })
   })
 
-  if (!updates.length) { setStatus('Isi minimal satu realisasi.', 'error'); return }
+  if (!items.length) { setStatus('Isi minimal satu realisasi.', 'error'); return }
 
   submitBtn.disabled = true
   showInputLoading('Menyimpan…')
 
-  const res = await appsScriptRequest({ action: 'updateMany', sheet: satker, updates })
+  const res = await appsScriptRequest({ action: 'updateRealisasi', sheet: satker, tahun, semester: sem, items })
   hideInputLoading()
 
   if (res && res.ok) {

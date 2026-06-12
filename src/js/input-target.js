@@ -86,63 +86,39 @@ async function init() {
 
 submitBtn.addEventListener('click', async () => {
   const tahun = Number(tahunSelect.value)
-  const appends = []
-  const updates = []
 
+  // Server (upsertTarget) yang memutuskan append/update secara atomik di dalam
+  // lock — aman walau beberapa user submit bersamaan (tidak ada baris ganda).
+  const items = []
   FOKUS_PRIORITAS.forEach((fokus, i) => {
     const output   = document.querySelector(`input[data-i="${i}"][data-f="output"]`).value.trim()
     const anggaran = document.querySelector(`input[data-i="${i}"][data-f="anggaran"]`).value.trim()
     if (output === '' && anggaran === '') return // lewati baris kosong
-
-    const oVal = output === '' ? '' : Number(output)
-    const aVal = parseRupiah(anggaran)
-    const existing = existingMap[fokus]
-
-    if (existing) {
-      const cols = {}
-      cols[COL.TARGET_OUTPUT]   = oVal
-      cols[COL.TARGET_ANGGARAN] = aVal
-      cols[COL.TAHUN]           = tahun
-      updates.push({ row: existing.row, cols })
-    } else {
-      const row = new Array(14).fill('')
-      row[COL.NO - 1]              = i + 1
-      row[COL.FOKUS - 1]          = fokus
-      row[COL.TARGET_OUTPUT - 1]  = oVal
-      row[COL.TARGET_ANGGARAN - 1] = aVal
-      row[COL.TAHUN - 1]          = tahun
-      appends.push(row)
-    }
+    items.push({
+      no:       i + 1,
+      fokus:    fokus,
+      output:   output === '' ? '' : Number(output),
+      anggaran: parseRupiah(anggaran),
+    })
   })
 
-  if (!appends.length && !updates.length) { setStatus('Isi minimal satu Fokus Prioritas.', 'error'); return }
+  if (!items.length) { setStatus('Isi minimal satu Fokus Prioritas.', 'error'); return }
   if (!satker) { setStatus('Satker tidak diketahui.', 'error'); return }
 
   submitBtn.disabled = true
   showInputLoading('Menyimpan…')
 
-  const errors = []
-  let added = 0, updated = 0
-
-  if (appends.length) {
-    const r = await appsScriptRequest({ action: 'append', sheet: satker, rows: appends })
-    if (r && r.ok) added = r.added; else errors.push((r && r.error) || 'append gagal')
-  }
-  if (updates.length) {
-    const r = await appsScriptRequest({ action: 'updateMany', sheet: satker, updates })
-    if (r && r.ok) updated = r.updated; else errors.push((r && r.error) || 'update gagal')
-  }
-
+  const r = await appsScriptRequest({ action: 'upsertTarget', sheet: satker, tahun, items })
   hideInputLoading()
 
-  if (!errors.length) {
+  if (r && r.ok) {
     const parts = []
-    if (added) parts.push(`${added} baru`)
-    if (updated) parts.push(`${updated} diperbarui`)
-    showResultDialog(true, `Data target berhasil disimpan (${parts.join(', ')}).`, inputGoBack)
+    if (r.added) parts.push(`${r.added} baru`)
+    if (r.updated) parts.push(`${r.updated} diperbarui`)
+    showResultDialog(true, `Data target berhasil disimpan (${parts.join(', ') || 'tidak ada perubahan'}).`, inputGoBack)
   } else {
     submitBtn.disabled = false
-    showResultDialog(false, 'Gagal menyimpan: ' + errors.join('; '), null)
+    showResultDialog(false, 'Gagal menyimpan: ' + ((r && r.error) || 'tidak diketahui'), null)
   }
 })
 
