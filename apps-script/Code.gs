@@ -300,6 +300,39 @@ function hashPassword(password, salt) {
 }
 
 /**
+ * GANTI PASSWORD — cara pakai (dari editor Apps Script, tanpa perlu deploy ulang):
+ *   1. Edit USERNAME dan PASSWORD_BARU di bawah
+ *   2. Pilih fungsi "adminSetPassword" → Run
+ *   3. Lihat hasil di Execution log; password langsung berlaku
+ * Catatan: password TIDAK boleh ditulis langsung di sheet "users" —
+ * kolom password_hash harus hasil hash, dan fungsi ini yang mengurusnya.
+ * Jangan lupa hapus kembali nilai PASSWORD_BARU setelah selesai.
+ */
+function adminSetPassword() {
+  var USERNAME      = 'GANTI_USERNAME';      // mis. 'bnnpaceh.4bnn'
+  var PASSWORD_BARU = 'GANTI_PASSWORD_BARU';
+
+  if (USERNAME === 'GANTI_USERNAME' || PASSWORD_BARU === 'GANTI_PASSWORD_BARU') {
+    throw new Error('Edit dulu USERNAME dan PASSWORD_BARU di dalam fungsi ini.');
+  }
+  if (PASSWORD_BARU.length < 6) throw new Error('Password minimal 6 karakter.');
+
+  var sh = SpreadsheetApp.openById(AUTH_SPREADSHEET_ID).getSheetByName('users');
+  if (!sh) throw new Error('Sheet "users" tidak ditemukan.');
+
+  var uname  = USERNAME.trim().toLowerCase();
+  var values = sh.getDataRange().getValues();
+  for (var i = 1; i < values.length; i++) { // baris 1 = header
+    if (String(values[i][0]).trim().toLowerCase() !== uname) continue;
+    var salt = Utilities.getUuid();
+    sh.getRange(i + 1, 2, 1, 2).setValues([[hashPassword(PASSWORD_BARU, salt), salt]]); // kolom B=hash, C=salt
+    Logger.log('Password "' + uname + '" berhasil diganti.');
+    return;
+  }
+  throw new Error('Username tidak ditemukan: ' + uname);
+}
+
+/**
  * SEED — jalankan SEKALI secara manual dari editor Apps Script
  * (pilih fungsi "seedAuthSheet" → Run, lalu beri izin akses).
  * Membuat tab "users" di spreadsheet auth & mengisi 35 akun.
