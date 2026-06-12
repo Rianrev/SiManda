@@ -33,6 +33,7 @@ form.addEventListener('submit', e => {
   setTimeout(() => {
     const session = authLogin(username, password);
     if (session) {
+      session._runId = (window.electronAPI && window.electronAPI.runId) || '';
       localStorage.setItem('simanda_session', JSON.stringify(session));
       window.location.replace('index.html');
     } else {

@@ -43,7 +43,17 @@ function authLogin(username, password) {
 }
 
 function getSession() {
-  try { return JSON.parse(localStorage.getItem('simanda_session')); } catch { return null; }
+  try {
+    const s = JSON.parse(localStorage.getItem('simanda_session'));
+    if (!s) return null;
+    // Wajib login tiap aplikasi dibuka: sesi hanya valid untuk run aplikasi yang sama.
+    const runId = window.electronAPI && window.electronAPI.runId;
+    if (runId && s._runId !== runId) {
+      localStorage.removeItem('simanda_session');
+      return null;
+    }
+    return s;
+  } catch { return null; }
 }
 
 function requireAuth() {

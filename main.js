@@ -116,6 +116,12 @@ ipcMain.on('get-app-version-sync', (e) => {
   e.returnValue = app.getVersion()
 })
 
+// ID unik per sesi-aplikasi → dipakai memvalidasi login (wajib login tiap app dibuka)
+const RUN_ID = Date.now().toString(36) + Math.random().toString(36).slice(2)
+ipcMain.on('get-run-id-sync', (e) => {
+  e.returnValue = RUN_ID
+})
+
 // Proxy request ke Apps Script Web App (dilakukan di main → hindari CORS renderer)
 ipcMain.handle('apps-script', async (_e, { url, payload }) => {
   const controller = new AbortController()
