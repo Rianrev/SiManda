@@ -21,7 +21,14 @@ togglePwd.addEventListener('click', () => {
   });
 });
 
-form.addEventListener('submit', e => {
+function showLoginError(msg) {
+  const text = document.getElementById('errorText');
+  if (text) text.textContent = msg;
+  errorMsg.classList.remove('hidden');
+  errorMsg.classList.add('flex');
+}
+
+form.addEventListener('submit', async e => {
   e.preventDefault();
   const username = document.getElementById('username').value.trim();
   const password = pwdInput.value;
@@ -30,22 +37,28 @@ form.addEventListener('submit', e => {
   btnText.textContent = 'Memproses...';
   btnSpinner.classList.remove('hidden');
 
-  setTimeout(() => {
-    const session = authLogin(username, password);
-    if (session) {
-      session._runId = (window.electronAPI && window.electronAPI.runId) || '';
-      localStorage.setItem('simanda_session', JSON.stringify(session));
-      window.location.replace('index.html');
-    } else {
-      errorMsg.classList.remove('hidden');
-      errorMsg.classList.add('flex');
-      pwdInput.value = '';
-      pwdInput.focus();
-      submitBtn.disabled = false;
-      btnText.textContent = 'Masuk';
-      btnSpinner.classList.add('hidden');
-    }
-  }, 300);
+  const res = await authLogin(username, password);
+
+  if (res && res.ok) {
+    const session = {
+      username: res.username,
+      region:   res.region,
+      _runId:   (window.electronAPI && window.electronAPI.runId) || '',
+    };
+    localStorage.setItem('simanda_session', JSON.stringify(session));
+    window.location.replace('index.html');
+    return;
+  }
+
+  const err = (res && res.error) || '';
+  showLoginError(err === 'INVALID_CREDENTIALS' || !err
+    ? 'Username atau password salah.'
+    : err);
+  pwdInput.value = '';
+  pwdInput.focus();
+  submitBtn.disabled = false;
+  btnText.textContent = 'Masuk';
+  btnSpinner.classList.add('hidden');
 });
 
 document.getElementById('username').focus();

@@ -21,6 +21,10 @@
 
 const SECRET_TOKEN = 'GANTI_DENGAN_TOKEN_RAHASIA';
 
+// Spreadsheet kredensial (file TERPISAH dari data, jangan di-share ke siapa pun).
+// Isi dengan ID dari URL: https://docs.google.com/spreadsheets/d/<ID>/edit
+const AUTH_SPREADSHEET_ID = 'GANTI_DENGAN_ID_SPREADSHEET_AUTH';
+
 function doGet(e)  { return handle((e && e.parameter) || {}); }
 function doPost(e) {
   var body = {};
@@ -31,6 +35,10 @@ function doPost(e) {
 function handle(p) {
   try {
     if (p.token !== SECRET_TOKEN) return json({ ok: false, error: 'Unauthorized' });
+
+    // Login tidak butuh parameter "sheet" — cek kredensial di spreadsheet auth.
+    if (p.action === 'login') return json(loginUser(p.username, p.password));
+
     if (!p.sheet) return json({ ok: false, error: 'Parameter "sheet" wajib' });
 
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(p.sheet);
@@ -94,4 +102,92 @@ function json(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================================
+//  AUTH — kredensial di spreadsheet TERPISAH (AUTH_SPREADSHEET_ID)
+//  Tab "users": username | password_hash | salt | region | aktif
+// ============================================================
+
+function loginUser(username, password) {
+  if (!username || !password) return { ok: false, error: 'INVALID_CREDENTIALS' };
+  var sh = SpreadsheetApp.openById(AUTH_SPREADSHEET_ID).getSheetByName('users');
+  if (!sh) return { ok: false, error: 'Sheet "users" belum dibuat. Jalankan seedAuthSheet().' };
+
+  var uname  = String(username).trim().toLowerCase();
+  var values = sh.getDataRange().getValues();
+  for (var i = 1; i < values.length; i++) { // baris 1 = header
+    var r = values[i];
+    if (String(r[0]).trim().toLowerCase() !== uname) continue;
+    if (String(r[4]).trim().toUpperCase() !== 'Y') return { ok: false, error: 'Akun dinonaktifkan. Hubungi admin.' };
+    if (hashPassword(password, String(r[2])) !== String(r[1])) break; // password salah → jawaban generik
+    return { ok: true, username: uname, region: String(r[3]) };
+  }
+  return { ok: false, error: 'INVALID_CREDENTIALS' };
+}
+
+function hashPassword(password, salt) {
+  var bytes = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256, salt + ':' + password, Utilities.Charset.UTF_8);
+  return bytes.map(function (b) { return ('0' + (b & 0xFF).toString(16)).slice(-2); }).join('');
+}
+
+/**
+ * SEED — jalankan SEKALI secara manual dari editor Apps Script
+ * (pilih fungsi "seedAuthSheet" → Run, lalu beri izin akses).
+ * Membuat tab "users" di spreadsheet auth & mengisi 35 akun.
+ * PERINGATAN: menimpa seluruh isi tab "users" bila sudah ada.
+ */
+function seedAuthSheet() {
+  var ACCOUNTS = [
+    // [username, password, region]
+    ['bnnpaceh.4bnn',      '123456',        'Aceh'],
+    ['bnnpsumut.7bnn',     '123456',        'Sumatera Utara'],
+    ['bnnpsumbar.2bnn',    '123456',        'Sumatera Barat'],
+    ['bnnpriau.9bnn',      '123456',        'Riau'],
+    ['bnnpkepri.1bnn',     '123456',        'Kepulauan Riau'],
+    ['bnnpjambi.5bnn',     '123456',        'Jambi'],
+    ['bnnpsumsel.8bnn',    '123456',        'Sumatera Selatan'],
+    ['bnnpbabel.3bnn',     '123456',        'Bangka Belitung'],
+    ['bnnpbengkulu.6bnn',  '123456',        'Bengkulu'],
+    ['bnnplampung.10bnn',  '123456',        'Lampung'],
+    ['bnnpdki.2bnn',       '123456',        'DKI Jakarta'],
+    ['bnnpbanten.7bnn',    '123456',        'Banten'],
+    ['bnnpjabar.4bnn',     '123456',        'Jawa Barat'],
+    ['bnnpjateng.9bnn',    '123456',        'Jawa Tengah'],
+    ['bnnpdiy.1bnn',       '123456',        'DIY'],
+    ['bnnpjatim.5bnn',     '123456',        'Jawa Timur'],
+    ['bnnpbali.8bnn',      '123456',        'Bali'],
+    ['bnnpntb.3bnn',       '123456',        'NTB'],
+    ['bnnpntt.6bnn',       '123456',        'NTT'],
+    ['bnnpkalbar.10bnn',   '123456',        'Kalimantan Barat'],
+    ['bnnpkalteng.2bnn',   '123456',        'Kalimantan Tengah'],
+    ['bnnpkalsel.7bnn',    '123456',        'Kalimantan Selatan'],
+    ['bnnpkaltim.4bnn',    '123456',        'Kalimantan Timur'],
+    ['bnnpkaltara.9bnn',   '123456',        'Kalimantan Utara'],
+    ['bnnpsulut.1bnn',     '123456',        'Sulawesi Utara'],
+    ['bnnpgorontalo.5bnn', '123456',        'Gorontalo'],
+    ['bnnpsulteng.8bnn',   '123456',        'Sulawesi Tengah'],
+    ['bnnpsulbar.3bnn',    '123456',        'Sulawesi Barat'],
+    ['bnnpsulsel.6bnn',    '123456',        'Sulawesi Selatan'],
+    ['bnnpsultra.10bnn',   '123456',        'Sulawesi Tenggara'],
+    ['bnnpmaluku.2bnn',    '123456',        'Maluku'],
+    ['bnnpmalut.7bnn',     '123456',        'Maluku Utara'],
+    ['bnnppapua.4bnn',     '123456',        'Papua'],
+    ['bnnppabar.9bnn',     '123456',        'Papua Barat'],
+    ['master.1bnn',        'MasterSimanda', '*'],
+  ];
+
+  var ss = SpreadsheetApp.openById(AUTH_SPREADSHEET_ID);
+  var sh = ss.getSheetByName('users') || ss.insertSheet('users');
+  sh.clear();
+
+  var rows = [['username', 'password_hash', 'salt', 'region', 'aktif']];
+  ACCOUNTS.forEach(function (a) {
+    var salt = Utilities.getUuid();
+    rows.push([a[0], hashPassword(a[1], salt), salt, a[2], 'Y']);
+  });
+  sh.getRange(1, 1, rows.length, 5).setValues(rows);
+  sh.setFrozenRows(1);
+  Logger.log('Seed selesai: ' + ACCOUNTS.length + ' akun di tab "users".');
 }
