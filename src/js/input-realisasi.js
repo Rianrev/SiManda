@@ -64,6 +64,11 @@ function toNum(v) {
   return isNaN(n) ? 0 : n
 }
 
+// URL http(s) yang wajar: host mengandung titik, tanpa spasi (sama dengan validasi server)
+function validLink(s) {
+  return /^https?:\/\/[^\s\/]+\.[^\s\/]{2,}(\/\S*)?$/i.test(s)
+}
+
 // Baris "Tercapai: X / Y" (akumulasi Sem I + Sem II), update live
 function updateCardProgress(card) {
   const tOut = Number(card.dataset.tout) || 0
@@ -163,6 +168,11 @@ rowsEl.addEventListener('input', e => {
     const card = e.target.closest('[data-row]')
     if (card) updateCardProgress(card)
   }
+  // Hapus tanda merah saat link diperbaiki
+  if (e.target.matches('[data-f="datadukung"]')) {
+    e.target.style.borderColor = ''
+    e.target.style.boxShadow = ''
+  }
 })
 
 async function init() {
@@ -210,15 +220,27 @@ submitBtn.addEventListener('click', async () => {
   // Server mencari baris via (fokus, tahun) — bukan nomor baris dari halaman ini,
   // yang bisa bergeser bila ada baris baru/terhapus sejak halaman dimuat.
   const items = []
+  const invalidLinks = []
   rowsEl.querySelectorAll('[data-row]').forEach(card => {
     if (card.dataset.locked) return // Sem II terkunci (sudah tercapai di Sem I)
     const out  = card.querySelector('[data-f="output"]').value.trim()
     const ang  = card.querySelector('[data-f="anggaran"]').value.trim()
     const hamb = card.querySelector('[data-f="hambatan"]').value.trim()
     const pend = card.querySelector('[data-f="pendukung"]').value.trim()
-    let dd     = card.querySelector('[data-f="datadukung"]').value.trim()
+    const ddEl = card.querySelector('[data-f="datadukung"]')
+    let dd     = ddEl.value.trim()
     // Lengkapi skema agar link bisa dibuka dari dashboard (mis. "drive.google.com/…")
     if (dd && !/^https?:\/\//i.test(dd)) dd = 'https://' + dd
+
+    // Link diisi tapi bukan URL → tandai merah, batalkan submit
+    if (dd && !validLink(dd)) {
+      ddEl.style.borderColor = '#ef4444'
+      ddEl.style.boxShadow = '0 0 0 1px #ef4444'
+      invalidLinks.push(card.getAttribute('data-fokus'))
+      return
+    }
+    ddEl.style.borderColor = ''
+    ddEl.style.boxShadow = ''
 
     if (out === '' && ang === '' && hamb === '' && pend === '' && dd === '') return // lewati card kosong
 
@@ -232,6 +254,10 @@ submitBtn.addEventListener('click', async () => {
     })
   })
 
+  if (invalidLinks.length) {
+    setStatus('Link Data Dukung tidak valid pada: ' + invalidLinks.join(', ') + '. Isi alamat lengkap (contoh: https://drive.google.com/...) atau kosongkan.', 'error')
+    return
+  }
   if (!items.length) { setStatus('Isi minimal satu realisasi.', 'error'); return }
 
   submitBtn.disabled = true

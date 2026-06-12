@@ -100,6 +100,14 @@ function cleanNum(v) {
   return (isNaN(n) || n < 0) ? null : n;
 }
 function cleanText(v) { return String(v == null ? '' : v).slice(0, 2000); }
+// Link data dukung: '' boleh (kosong); selain itu wajib URL http(s) yang wajar
+// (host mengandung titik, tanpa spasi). Teks asal → null (invalid).
+function cleanLink(v) {
+  var s = String(v == null ? '' : v).trim();
+  if (s === '') return '';
+  if (s.length > 500) return null;
+  return /^https?:\/\/[^\s\/]+\.[^\s\/]{2,}(\/\S*)?$/i.test(s) ? s : null;
+}
 
 // Index baris yang ada: "fokus|tahun" → nomor baris (1-based)
 function buildRowIndex(sheet) {
@@ -186,7 +194,11 @@ function updateRealisasi(sheet, tahun, semester, items) {
     if (out === null || ang === null) {
       return { ok: false, error: 'Output/Anggaran harus angka ≥ 0 ("' + fokus + '")' };
     }
-    clean.push({ fokus: fokus, vals: [out, ang, cleanText(it.hambatan), cleanText(it.pendukung), cleanText(it.dataDukung)] });
+    var dd = cleanLink(it.dataDukung);
+    if (dd === null) {
+      return { ok: false, error: 'Link Data Dukung tidak valid ("' + fokus + '"). Isi alamat lengkap, contoh: https://drive.google.com/...' };
+    }
+    clean.push({ fokus: fokus, vals: [out, ang, cleanText(it.hambatan), cleanText(it.pendukung), dd] });
   }
 
   var index = buildRowIndex(sheet);
