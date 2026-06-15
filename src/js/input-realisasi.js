@@ -105,24 +105,18 @@ function renderRows() {
 
     const tOut = toNum(r.values[COL.TARGET_OUTPUT - 1])
     const tAng = toNum(r.values[COL.TARGET_ANGGARAN - 1])
-    const semIOut  = toNum(r.values[COL.REAL1_OUTPUT - 1])
     const otherOut = toNum(sem === 'I' ? r.values[COL.REAL2_OUTPUT - 1]   : r.values[COL.REAL1_OUTPUT - 1])
     const otherAng = toNum(sem === 'I' ? r.values[COL.REAL2_ANGGARAN - 1] : r.values[COL.REAL1_ANGGARAN - 1])
 
-    // Sem II dikunci bila target sudah tercapai di Sem I
-    const locked = sem === 'II' && tOut > 0 && semIOut >= tOut
-    const dis = locked ? 'disabled' : ''
-    const inputCls = locked ? 'bg-slate-100 cursor-not-allowed text-slate-400' : 'text-slate-800'
-    const lockNote = locked
-      ? '<div style="display:flex;align-items:center;gap:6px;background:#dcfce7;border:1px solid #bbf7d0;color:#15803d;font-size:12px;border-radius:8px;padding:8px 10px;margin-bottom:12px;">✓ Target sudah tercapai di Semester I.</div>'
-      : ''
+    // Sem I & II selalu bisa diinput (tidak dikunci walau target sudah tercapai di Sem I)
+    const dis = ''
+    const inputCls = 'text-slate-800'
 
     return `
-      <div data-row="${r.row}" data-fokus="${escapeHtml(r.fokus)}"${locked ? ' data-locked="1"' : ''} data-tout="${tOut}" data-tang="${tAng}" data-oout="${otherOut}" data-oang="${otherAng}" class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div data-row="${r.row}" data-fokus="${escapeHtml(r.fokus)}" data-tout="${tOut}" data-tang="${tAng}" data-oout="${otherOut}" data-oang="${otherAng}" class="bg-white rounded-2xl border border-slate-200 p-5">
         <h3 class="text-slate-800 font-semibold text-sm mb-1">${escapeHtml(r.fokus)}</h3>
         <p class="text-xs text-slate-500 mb-1">Target: <b class="text-slate-700">${fmt(tOut)}</b> output · <b class="text-slate-700">Rp ${fmt(tAng)}</b></p>
         <p data-progress class="text-xs mb-3"></p>
-        ${lockNote}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <div>
             <label class="block text-xs text-slate-500 mb-1">Realisasi Output</label>
@@ -222,7 +216,6 @@ submitBtn.addEventListener('click', async () => {
   const items = []
   const invalidLinks = []
   rowsEl.querySelectorAll('[data-row]').forEach(card => {
-    if (card.dataset.locked) return // Sem II terkunci (sudah tercapai di Sem I)
     const out  = card.querySelector('[data-f="output"]').value.trim()
     const ang  = card.querySelector('[data-f="anggaran"]').value.trim()
     const hamb = card.querySelector('[data-f="hambatan"]').value.trim()
