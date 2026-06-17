@@ -1,158 +1,116 @@
 # SI MANDA — Project Context
 
-> Dokumen ini ditujukan untuk AI/developer lain yang perlu memahami proyek dengan cepat.
+> Dokumen handoff untuk AI/developer lain yang perlu memahami proyek dengan cepat.
+> Terakhir diperbarui: Juni 2026, branch `test-fitur` (versi 1.1.0).
 
 ## Ringkasan
 
-**SI MANDA** (Sistem Informasi Monitoring Data) adalah aplikasi desktop **Electron** untuk **BNN RI** (Badan Narkotika Nasional Republik Indonesia). Tujuannya menampilkan dan memonitor data kinerja satuan kerja (satker) BNN yang tersimpan sebagai **Google Sheets** — baik dalam bentuk dashboard ringkas maupun tampilan spreadsheet penuh.
+**SI MANDA** (Sistem Informasi Monitoring Data) adalah aplikasi desktop **Electron** untuk **BNN RI**. Fungsinya: memantau data kinerja satuan kerja (satker/provinsi) BNN — input **Target** & **Realisasi** per Fokus Prioritas, lalu menampilkannya sebagai dashboard. Data tersimpan di **Google Sheets**, diakses lewat backend **Google Apps Script** (bukan CSV publik lagi).
 
-- **Stack**: Electron 30, HTML + TailwindCSS (build lokal di `src/assets/css/tailwind.min.css`), Chart.js (lokal di `src/assets/vendor`), vanilla JS
-- **Packager**: Electron Forge 7 (squirrel / zip / deb / rpm)
-- **Bahasa UI**: Indonesia
-- **Data source**: Google Sheets publik (via URL `docs.google.com/spreadsheets/...`)
+- **Stack**: Electron 30, HTML + TailwindCSS v4 (build lokal `src/assets/css/tailwind.min.css`), Chart.js (lokal di `src/assets/vendor`), vanilla JS (tanpa bundler).
+- **Backend**: Google Apps Script Web App (`apps-script/Code.gs`) + dua Google Spreadsheet (data satker & kredensial — TERPISAH).
+- **Build/Release**: electron-builder (NSIS installer) via `scripts/build-dist.js`; auto-update via `electron-updater` + GitHub Releases.
+- **Bahasa UI**: Indonesia.
 
-## Struktur Folder
+## Remote Git (PENTING)
 
-```
-app/
-├── main.js              # Entry point Electron (main process)
-├── preload.js           # Preload script (versi chrome/node/electron)
-├── menumaker.js         # Application menu (File/View/Window)
-├── forge.config.js      # Konfigurasi Electron Forge + Fuses
-├── package.json
-├── src/
-│   ├── index.html             # Halaman beranda (animasi tech, landing)
-│   ├── login.html             # Halaman login
-│   ├── sidebar.html           # Sidebar nav (di-fetch & disuntikkan ke halaman)
-│   ├── web-view.html          # Menampilkan Google Sheet via <webview>
-│   ├── dashboard-ananda.html  # Dashboard analitik (parse CSV dari Sheet)
-│   ├── auth.js                # Autentikasi: getSession, authLogin, authLogout, filterSidebar
-│   ├── js/
-│   │   ├── index.js           # Script untuk index.html
-│   │   ├── login.js           # Script untuk login.html
-│   │   ├── dashboard-ananda.js # Script untuk dashboard-ananda.html (~300 baris)
-│   │   └── web-view.js        # Script untuk web-view.html
-│   └── assets/
-│       ├── css/
-│       │   ├── tailwind.min.css   # Tailwind build lokal (dengan konfigurasi warna navy)
-│       │   ├── index.css          # Animasi tech background untuk index.html
-│       │   └── sidebar.css        # Style nav sidebar (nav-link, chevron, active state)
-│       ├── img/                   # Logo, ikon (logo1.jpeg, logo1.ico, war-on-drugs.png)
-│       └── vendor/chart.js/chart.umd.js
-├── build/               # Ikon build (.ico)
-└── release-builds/      # Output build
-```
+- `origin` → **GitLab** `kawirian108-group/SiManda` — repositori kode utama.
+- `github` → **GitHub** `Rianrev/SiManda` — khusus Release/auto-updater. Aset release dinamai berstrip (`SI-MANDA-Setup-X.Y.Z.exe`) mengikuti `latest.yml`.
+- Branch kerja: `test-fitur` (belum di-merge ke `master`). Token GitHub tersedia via `git credential fill`; `gh` CLI TIDAK terpasang — pakai GitHub REST API (curl/Invoke-RestMethod).
 
-## Arsitektur Singkat
+## Arsitektur
 
 ### Main process (`main.js`)
-- Membuat `BrowserWindow` 1280×720 dengan `webviewTag: true` (diperlukan untuk embed Google Sheet).
-- Memasang **Content-Security-Policy** via `session.defaultSession.webRequest.onHeadersReceived`:
-  - `script-src` mengizinkan sumber lokal
-  - `connect-src` mengizinkan `docs.google.com` + `*.googleusercontent.com`
-  - `frame-src` mengizinkan `docs.google.com` + `accounts.google.com`
-- Memasang menu dari `menumaker.js`.
+- `BrowserWindow` 1280×720, `webviewTag: true` (jangan dihapus — dipakai `web-view.html`).
+- **IPC handlers** (penting, beda dari dok lama yang bilang "tidak ada IPC"):
+  - `apps-script` (invoke) → proxy `fetch` POST ke Apps Script di main process (hindari CORS renderer), timeout 30 dtk.
+  - `open-external` → buka URL `http(s)` di browser eksternal (`shell.openExternal`).
+  - `get-app-version-sync`, `get-run-id-sync` → versi app & ID unik per run.
+  - `get-update-status` / `restart-to-update` + event auto-updater (`update-available/progress/downloaded`).
+- Auto-updater: cek cache lokal dulu (`checkCachedUpdate`) lalu GitHub. `autoInstallOnAppQuit=false` (install hanya saat user klik Restart).
+- Catatan: saat ini TIDAK ada blok CSP `onHeadersReceived` (dok lama keliru menyebutnya).
 
-### Autentikasi (`auth.js`)
-Global functions yang tersedia di semua halaman:
-- `getSession()` — membaca sesi dari `localStorage`, returns `null` jika belum login.
-- `authLogin(username, password)` — memvalidasi kredensial, returns session object atau `null`.
-- `authLogout()` — menghapus sesi dan redirect ke `login.html`.
-- `filterSidebar()` — menyembunyikan link sidebar yang tidak sesuai dengan `session.region` pengguna (non-master hanya melihat satker mereka sendiri).
+### `preload.js`
+Expose `window.electronAPI`: `appsScript(url, payload)`, `openExternal(url)`, `appVersion`, `runId`, dan fungsi updater. Inilah jembatan renderer → main.
 
-Session object: `{ region: string }` — region `'*'` berarti Master (akses semua).
+### Backend Apps Script (`apps-script/Code.gs`)
+File ini **template/referensi** — TIDAK ikut ter-bundle ke installer (whitelist `files` di package.json tidak menyertakan `apps-script/`). Yang berjalan adalah versi yang sudah di-deploy di editor Apps Script (dengan `SECRET_TOKEN` & `AUTH_SPREADSHEET_ID` asli; di repo masih placeholder).
 
-Guard redirect di setiap halaman (kecuali login) ada di `<head>` sebagai inline script:
-```html
-<script src="auth.js"></script>
-<script>if (!getSession()) window.location.replace('login.html');</script>
+- Endpoint POST JSON, semua butuh `token` = `SECRET_TOKEN`.
+- Actions: `login`, `list`, `info`, `upsertTarget`, `updateRealisasi`, plus lawas `append`/`update`/`updateMany`.
+- **Semua action yang menulis dibungkus `LockService`** (anti race saat input bersamaan).
+- `upsertTarget`: server yang memutuskan update/append per `(fokus,tahun)` secara atomik → anti baris ganda.
+- `updateRealisasi`: cari baris via `(fokus,tahun)` (bukan nomor baris client yang bisa bergeser); tulis 5 kolom blok semester sekaligus.
+- Validasi server: `validTahun` (2020..tahun+1), `cleanNum` (≥0), `cleanText` (maks 2000), `cleanLink` (wajib URL http(s) wajar; '' boleh).
+- `adminSetPassword()` — ganti password user dari editor Apps Script (re-hash + salt baru), tanpa deploy ulang.
+- `seedAuthSheet()` — masih ada di repo sebagai referensi, tapi **sudah DIHAPUS dari Apps Script yang ter-deploy** (berbahaya: `sh.clear()` me-reset semua password). Jangan dijalankan lagi.
+
+### Autentikasi (server-side)
+- Kredensial di **spreadsheet TERPISAH** dari data (`AUTH_SPREADSHEET_ID`), tab `users`: `username | password_hash | salt | region | aktif`.
+- Password di-**hash SHA-256 + salt unik per user** (`Utilities.computeDigest`), bukan plaintext, bukan reversible. Salt acak (`Utilities.getUuid`).
+- `loginUser` di Code.gs verifikasi; kolom `aktif != Y` → akun nonaktif.
+- Client ([src/auth.js](src/auth.js)): `authLogin()` async memanggil action `login`. `getSession()` membaca `localStorage`; sesi diikat ke `runId` → **wajib login tiap aplikasi dibuka**. `filterSidebar()` menyembunyikan satker non-region untuk user non-master (region `'*'` = Master). `login.html` memuat `js/input-config.js` lalu `auth.js`.
+- Password saat ini masih `123456` (semua satker) / `MasterSimanda` (master). Migrasi ke password unik per satker DITUNDA atas keputusan user.
+
+### Konfigurasi client (`src/js/input-config.js`)
+- `APPS_SCRIPT.url` + `APPS_SCRIPT.token` (token `123789456` — ikut ter-bundle di `app.asar`, kandidat dirotasi).
+- `TAHUN_BERJALAN = new Date().getFullYear()` (dinamis).
+- `FOKUS_PRIORITAS` (7 item), `SATKER_MAP` (BARU berisi Aceh — 33 satker lain belum dilengkapi).
+- `COL` (1-based, harus sama dengan `COLS` di Code.gs).
+
+### Struktur kolom sheet data (A..P, 16 kolom)
 ```
+1 No · 2 Satker · 3 Fokus · 4 TargetOutput · 5 TargetAnggaran · 6 Tahun
+Sem I : 7 Real1Output · 8 Real1Anggaran · 9 Hambatan1 · 10 Pendukung1 · 11 DataDukung1
+Sem II: 12 Real2Output · 13 Real2Anggaran · 14 Hambatan2 · 15 Pendukung2 · 16 DataDukung2
+```
+Nama satker diambil dari sel A1 tiap tab. Nama tab = `title` di link sidebar.
 
-### Renderer (halaman HTML di `src/`)
-Tidak ada bundler. Setiap HTML:
-1. Load `auth.js` + inline guard redirect di `<head>`.
-2. Load CSS via `<link>`: `sidebar.css` (semua halaman dengan sidebar), `index.css` (hanya index.html), `tailwind.min.css`.
-3. Load JS via `<script src="js/...">` di bawah `</body>`.
-4. Script halaman `fetch('sidebar.html')` lalu inject ke `<aside id="sidebar">`, kemudian panggil `filterSidebar()`.
-5. Tombol `#toggleBtn` untuk buka/tutup sidebar (toggle class `-translate-x-full` dan `ml-64/ml-0`).
+## Halaman (renderer, `src/`)
 
-### Navigasi antar halaman
-Semua link di sidebar memakai query string:
-- `web-view.html?param1=<URL_SHEET>&title=<JUDUL>` — buka Sheet di dalam `<webview>`.
-- `dashboard-ananda.html?sheetId=<ID>&title=<JUDUL>&sheetUrl=<URL>` — tampilkan dashboard ringkas.
+Pola tiap halaman: `<head>` memuat `auth.js` + inline guard `if(!getSession()) replace('login.html')`; sidebar di-`fetch('sidebar.html')` lalu inject ke `<aside id="sidebar">` + `filterSidebar()`; script halaman di bawah `</body>`.
 
-Sidebar dikelompokkan: **WIB**, **WITA**, **WIT** (zona waktu Indonesia), berisi 34 provinsi. Semua satker mengarah ke `dashboard-ananda.html`.
+- **`login.html`** — form login; submit async → `authLogin` (Apps Script). Pesan error membedakan kredensial salah vs gangguan jaringan.
+- **`index.html`** — beranda (animasi tech background).
+- **`dashboard-ananda.html`** + `js/dashboard-ananda.js` — dashboard satker:
+  - Ambil data via Apps Script `action:'list'` pada tab `?title=<Satker>`; `parseRows` hanya pakai baris dengan Fokus terisi & Tahun ≥ 2000.
+  - Filter **Tahun Anggaran** (data-driven, semua tahun berdata) + **Semester** (I/II).
+  - Kartu metrik 2 baris: [Target Output, Realisasi Output] · [Target Anggaran, Realisasi Anggaran, % Realisasi Anggaran].
+  - 2 bar chart (Output & Anggaran per Fokus: Target/Sem I/Sem II).
+  - Tabel **Target & Realisasi** (kolom Data Dukung berisi tombol Sem I/Sem II → `openExternal`) + tabel **Hambatan & Pendukung** (judul ikut semester aktif).
+  - Tombol Input → popup pilih Input Target / Input Realisasi.
+- **`input-target.html`** + `js/input-target.js` — input target per Fokus. Dropdown tahun **terkunci ke tahun berjalan saja** (by design). Submit → `upsertTarget`.
+- **`input-realisasi.html`** + `js/input-realisasi.js` — input realisasi per semester. Dropdown tahun **data-driven** (tahun-tahun yang punya target) → bisa input realisasi tahun lalu di tahun berjalan. Field: Output, Anggaran, Hambatan, Pendukung, **Link Data Dukung** (validasi URL client+server). Sem II TIDAK lagi dikunci walau target tercapai di Sem I. Submit → `updateRealisasi`.
+- **`web-view.html`** + `js/web-view.js` — embed Google Sheet via `<webview>` (validasi host `docs.google.com`).
+- **`sidebar.html`** — fragment nav; daftar satker hardcode (link `dashboard-ananda.html?...&title=<Satker>`). Ada menu **Survey** (`<a data-survey>`) → handler delegasi di `auth.js` buka Google Form via `openExternal` (`SURVEY_LINK`). Juga ada widget **TANIA** (FAB WhatsApp) di `auth.js`.
 
-## Halaman
-
-### `login.html` — Login
-- Validasi session; jika sudah login redirect ke `index.html`.
-- Form username + password dengan toggle show/hide.
-- Script di `js/login.js`.
-
-### `index.html` — Beranda
-- Animasi tech background: grid, scan line, particle float, rotating rings, logo float.
-- Animasi CSS di `assets/css/index.css`; script di `js/index.js`.
-- Sidebar dimuat via fetch.
-
-### `web-view.html` — Viewer Google Sheet
-- Memvalidasi `param1` harus `hostname === 'docs.google.com'` dan path diawali `/spreadsheets/`.
-- Kontrol akses regional: non-master hanya bisa melihat sheet yang `title` sesuai `session.region`.
-- Menampilkan `<webview src=url>` dengan event `did-finish-load` / `did-fail-load`.
-- Script di `js/web-view.js`.
-
-### `dashboard-ananda.html` — Dashboard Analitik
-- Fetch CSV export: `https://docs.google.com/spreadsheets/d/<sheetId>/export?format=csv`
-- Parse CSV (mendukung quoted fields).
-- Struktur data Sheet yang diharapkan: kolom 0 = nomor, kolom 1 = nama satker, kolom 2 = fokus prioritas, kolom 3 = target output, kolom 4 = satuan, kolom 5 = target anggaran, kolom 6 = realisasi output, kolom 8 = realisasi anggaran.
-- Kontrol akses regional: non-master hanya bisa membuka dashboard yang `title` sesuai `session.region`.
-- Render:
-  - 4 metric cards (Total Satker, Target Output, Anggaran Total, Rata-rata Realisasi %)
-  - Bar chart perbandingan output satker (Chart.js)
-  - Bar chart perbandingan anggaran satker (Chart.js)
-  - Tabel detail per satker dengan grouping fokus prioritas dan zebra striping
-  - Filter satker (dropdown) + filter fokus prioritas (dropdown)
-- Tombol "Lihat Google Sheet" mengarahkan ke `web-view.html`.
-- Script di `js/dashboard-ananda.js`.
-
-### `sidebar.html` — Navigasi Sidebar
-- Fragment HTML murni (tidak ada `<html>`/`<head>`), di-load via `fetch` ke semua halaman.
-- Tidak berisi `<style>` — CSS-nya ada di `assets/css/sidebar.css`.
-- Accordion: WIB (18 provinsi), WITA (12 provinsi), WIT (4 provinsi).
-
-## Konvensi Styling
-
-- Tema navy konsisten: header `bg-navy-800`, sidebar `bg-navy-900`.
-- Sidebar: `w-64`, `fixed`, scroll custom tipis (`.scrollbar-thin`).
-- Main content: offset `ml-64 mt-14` (sidebar 256px, header 56px).
-- Warna status: emerald/green untuk positif, red untuk error.
-- Font: Inter + Manrope (Google Fonts, di `dashboard-ananda.html` dan `web-view.html`).
-
-## Menjalankan
+## Build & Release
 
 ```bash
-npm install
-npm start        # atau: npm run dev
-npm run package  # package tanpa installer
-npm run make     # build installer sesuai platform
+npm start                              # dev (electron-forge start)
+node scripts/build-dist.js --target installer   # build NSIS installer ke dist/
 ```
+- `scripts/build-dist.js`: generate Tailwind + ikon, swap CDN→CSS lokal di HTML, jalankan electron-builder (NSIS), restore HTML.
+- **Catatan Windows**: script npm `build:css` (`node_modules/.bin/tailwindcss ...`) gagal di PowerShell; jalankan via Git Bash `./node_modules/.bin/tailwindcss -i src/assets/css/input.css -o src/assets/css/tailwind.min.css --minify`.
+- Setelah build: buat GitHub Release + upload `SI-MANDA-Setup-X.Y.Z.exe`, `.blockmap`, `latest.yml` (lihat `scripts/upload-release.ps1` sebagai acuan; token via git credential).
+- **Dua sistem build koeksis**: electron-forge (devDeps + `forge.config.js`) dan electron-builder (`build` di package.json). Yang dipakai untuk release = electron-builder. Idealnya forge dipensiunkan (lihat peningkatan).
 
-## Catatan Penting untuk Pengembangan
+### Deploy backend (WAJIB tiap ubah Code.gs)
+1. Salin `apps-script/Code.gs` ke editor Apps Script.
+2. Isi `SECRET_TOKEN` (= `123789456`) & `AUTH_SPREADSHEET_ID` (ID spreadsheet kredensial).
+3. Deploy → Manage deployments → edit → **New version** (URL web app tetap sama).
 
-1. **Tidak ada build step untuk JS** — edit file di `src/js/` langsung terefleksi. Tailwind sudah di-build lokal ke `tailwind.min.css`.
-2. **`webviewTag: true`** wajib untuk `web-view.html`. Jangan dihapus dari `main.js`.
-3. **CSP di `main.js`** harus ikut di-update bila menambah domain/CDN baru.
-4. **Sheet ID vs URL**: `dashboard-ananda.html` butuh `sheetId` murni (untuk `.../export?format=csv`); `web-view.html` butuh URL penuh.
-5. **Daftar satker di `sidebar.html`** di-hardcode. Untuk menambah satker, edit langsung file ini (pola link sudah ada).
-6. **Heuristik parsing dashboard** bergantung pada struktur kolom sheet tertentu. Perubahan layout Sheet akan memecah parsing di `parseSatkerData()` di `js/dashboard-ananda.js`.
-7. **Auth guard** harus tetap sebagai inline script di `<head>` (bukan external file) agar redirect terjadi sebelum render halaman. Jangan pindahkan ke `js/`.
-8. **sidebar.css** harus di-link di semua halaman yang memuat sidebar (index, dashboard-ananda, web-view). Jika menambah halaman baru, pastikan link ini ada.
-9. **Electron Fuses**: `RunAsNode` & `NodeOptions` dimatikan; `OnlyLoadAppFromAsar` aktif.
-10. **Preload.js** saat ini hanya dipakai untuk menampilkan versi runtime — tidak ada IPC handler.
+## Status Saat Ini / TODO
 
-## Potensi Peningkatan (belum dikerjakan)
+- **Belum di-commit**: tombol Survey (`src/auth.js` + `src/sidebar.html`) — pending keputusan/commit user.
+- **Belum di-push**: commit `071cb7a` (unlock Sem II) menunggu di lokal (`origin/test-fitur`).
+- Release GitHub kini hanya **v1.1.0** (1.0.0 & 1.0.1 dihapus; tag v1.0.0/v1.0.1 masih ada).
 
-- Tidak ada test.
-- Sidebar bisa di-generate dari data JSON (saat ini ratusan baris HTML manual).
-- Shared sidebar logic (`initSidebarAccordion`, `activateSidebarLink`) duplikat di beberapa JS — bisa dipindah ke satu file `js/sidebar.js` yang di-load bersama.
-- Tidak ada offline fallback untuk fetch CSV dari Google Sheets.
+## Peningkatan yang disarankan (belum dikerjakan)
+
+1. **Token sesi per-region di Apps Script** — `SECRET_TOKEN` global masih memberi akses tulis lintas satker.
+2. **Whitelist URL** di handler IPC `apps-script` (`main.js`) — saat ini mem-fetch URL apa pun dari renderer.
+3. **Lengkapi `SATKER_MAP`** — baru Aceh dari 34 satker.
+4. **Migrasi password unik per satker** (generator siap dibuat).
+5. **Hardening**: `sandbox:true`, blokir navigasi keluar; upgrade Electron 30 (EOL).
+6. Konsolidasi build (pilih electron-builder, pensiunkan forge); tambah lint/test; footer "© 2026" hardcode bisa diotomatiskan.
