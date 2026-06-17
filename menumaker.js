@@ -25,8 +25,11 @@ const template = [
             { role: 'reload' },
             { type: 'separator'},
             { role: 'togglefullscreen' },
-            { type: 'separator' },
-            { role: 'toggleDevTools' }
+            // Developer Tools hanya saat dev — disembunyikan di build release (packaged).
+            ...(app.isPackaged ? [] : [
+                { type: 'separator' },
+                { role: 'toggleDevTools' }
+            ])
         ]
     },
     {

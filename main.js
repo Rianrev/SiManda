@@ -152,7 +152,10 @@ function createWindow() {
     height: 720,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      webviewTag: true
+      webviewTag: true,
+      // DevTools dimatikan di build release agar user tidak bisa mengutak-atik
+      // (mis. mengubah sesi/region di localStorage atau memanggil fungsi internal).
+      devTools: !app.isPackaged
     },
     icon: path.join(__dirname, 'src/assets/img/logo1.ico')
   })
