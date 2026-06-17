@@ -105,6 +105,27 @@ function filterSidebar() {
 }
 
 // ============================================================
+//  SURVEY — tombol di sidebar membuka Google Form di browser eksternal.
+//  Item menunya ada di sidebar.html (ditandai data-survey).
+// ============================================================
+const SURVEY_LINK = 'https://tinyurl.com/surveisimanda';
+
+function openSurveyLink() {
+  if (!SURVEY_LINK || SURVEY_LINK === '#') return;
+  if (window.electronAPI && window.electronAPI.openExternal) window.electronAPI.openExternal(SURVEY_LINK);
+  else window.open(SURVEY_LINK, '_blank');
+}
+
+// Delegasi: sidebar dimuat dinamis (fetch), jadi pasang di document agar
+// tetap bekerja kapan pun item survey muncul.
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('[data-survey]');
+  if (!link) return;
+  e.preventDefault();
+  openSurveyLink();
+});
+
+// ============================================================
 //  TANIA — widget support (floating button + popup) di semua halaman
 //  GANTI link dummy di bawah dengan link WhatsApp asli nanti.
 // ============================================================
