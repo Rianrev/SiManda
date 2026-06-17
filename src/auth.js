@@ -89,18 +89,25 @@ function authLogout() {
 function filterSidebar() {
   const s = getSession();
   if (!s || s.region === '*') return;
+  // Menu khusus master sementara (mis. Pengawasan Terpadu & E-SAKIP, fiturnya
+  // belum selesai). Hapus atribut data-master-only di sidebar.html bila sudah
+  // siap ditampilkan ke user satker juga.
+  document.querySelectorAll('#sidebar [data-master-only]').forEach(el => { el.style.display = 'none'; });
+  // Filter berbasis region: hanya untuk daftar satker (link punya ?title=).
+  // Menu fitur (tanpa ?title=) tidak ikut tersembunyi.
   document.querySelectorAll('#sidebar details ul li').forEach(li => {
     const a = li.querySelector('a[href]');
     if (!a) return;
     try {
       const u = new URL(a.href);
-      const title = u.searchParams.get('title') || '';
-      if (title !== s.region) li.style.display = 'none';
+      const title = u.searchParams.get('title');
+      if (title && title !== s.region) li.style.display = 'none';
     } catch {}
   });
+  // Sembunyikan details daftar satker yang jadi kosong (semua li tersaring).
   document.querySelectorAll('#sidebar details').forEach(det => {
-    const hasVisible = [...det.querySelectorAll('ul li')].some(li => li.style.display !== 'none');
-    if (!hasVisible) det.style.display = 'none';
+    const lis = det.querySelectorAll('ul li');
+    if (lis.length && ![...lis].some(li => li.style.display !== 'none')) det.style.display = 'none';
   });
 }
 

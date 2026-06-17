@@ -86,8 +86,8 @@
     </ul>
   </details>
 
-  <!-- Pengawasan Terpadu -->
-  <details class="group">
+  <!-- Pengawasan Terpadu (sementara khusus master — hapus data-master-only bila siap untuk satker) -->
+  <details class="group" data-master-only>
     <summary class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white cursor-pointer transition-colors duration-150 list-none">
       <svg class="w-5 h-5 text-slate-400 group-open:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -107,10 +107,20 @@
     </ul>
   </details>
 
+  <!-- E-SAKIP (sementara khusus master — hapus data-master-only bila siap untuk satker) -->
+  <a href="e-sakip.html" data-master-only
+    class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:text-white transition-colors duration-150 group">
+    <svg class="w-5 h-5 text-slate-400 group-hover:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M9 17v-6h13M9 17H4V5a2 2 0 012-2h7l4 4v3M9 17H4m5 0h11a2 2 0 002-2v-2a2 2 0 00-2-2H9"/>
+    </svg>
+    <span class="font-medium flex-1">E-SAKIP</span>
+  </a>
+
   <!-- Bottom info -->
   <div class="mt-auto pt-4 border-t border-white/10 mx-2">
     <div class="px-3 py-2 text-xs text-slate-500 text-center leading-relaxed">
-      SI MANDA &copy; 2026 · MHI
+      SI MANDA &copy; 2026 · MKWS
       <br><span id="appVersion" class="text-slate-600"></span>
     </div>
   </div>

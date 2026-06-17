@@ -45,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const page = window.location.pathname.split('/').pop() || 'index.html';
       for (const a of document.querySelectorAll('#sidebar a')) {
+        const href = a.getAttribute('href');
+        if (!href || href.charAt(0) === '#') continue; // lewati link non-navigasi (mis. Survey)
         try {
           const u = new URL(a.href, window.location.href);
           if (u.pathname.split('/').pop() === page) { a.classList.add('active'); break; }

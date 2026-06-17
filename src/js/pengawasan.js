@@ -30,6 +30,8 @@ if (pageTitle) document.getElementById('pageTitle').textContent = pageTitle
 
     const currentPage = window.location.pathname.split('/').pop()
     for (const a of sidebar.querySelectorAll('a')) {
+      const href = a.getAttribute('href')
+      if (!href || href.charAt(0) === '#') continue // lewati link non-navigasi (mis. Survey)
       try {
         const u = new URL(a.href, window.location.href)
         if (u.pathname.split('/').pop() === currentPage) {
