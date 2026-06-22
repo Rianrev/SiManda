@@ -1,20 +1,21 @@
 // ============================================================
-//  INPUT TARGET — isi/ubah target per Fokus Prioritas
-//  Belum ada utk tahun itu → append. Sudah ada → update kolom D,E.
+//  INPUT TARGET — isi/ubah target (output & anggaran) per Fokus Prioritas.
+//  Hanya untuk tahun berjalan. Server (upsertTarget) yang memutuskan
+//  baris baru (append) atau perbarui baris lama, secara atomik di dalam lock.
 // ============================================================
 const params = new URLSearchParams(window.location.search)
-const satker = params.get('satker') || ''          // nama tab (mis. "Aceh")
+const satker = params.get('satker') || ''   // nama tab sheet (mis. "Aceh")
 
-const satkerLabelEl = document.getElementById('satkerLabel')
-const tahunSelect   = document.getElementById('tahunSelect')
-const rowsEl        = document.getElementById('rows')
-const submitBtn     = document.getElementById('submitBtn')
+const labelSatker = document.getElementById('satkerLabel')
+const tahunSelect = document.getElementById('tahunSelect')
+const wadahBaris  = document.getElementById('rows')
+const submitBtn   = document.getElementById('submitBtn')
 
-satkerLabelEl.textContent = satker
+labelSatker.textContent = satker
 tahunSelect.innerHTML = `<option value="${TAHUN_BERJALAN}">${TAHUN_BERJALAN}</option>`
 
-// fokus → { row } untuk tahun terpilih (baris yang sudah ada di sheet)
-let existingMap = {}
+// Fokus yang sudah punya baris target di sheet (untuk tahun berjalan).
+let fokusSudahAda = {}   // { [namaFokus]: true }
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => (
@@ -22,14 +23,19 @@ function escapeHtml(s) {
   ))
 }
 
-function setStatus(msg, type) {
+function setStatus(pesan, tipe) {
   const el = document.getElementById('statusMsg')
-  el.textContent = msg
-  el.className = 'text-sm ' + (type === 'error' ? 'text-red-600' : type === 'ok' ? 'text-green-600' : 'text-slate-500')
+  el.textContent = pesan
+  el.className = 'text-sm ' + (tipe === 'error' ? 'text-red-600' : tipe === 'ok' ? 'text-green-600' : 'text-slate-500')
 }
 
-// Render baris kosong dulu
-rowsEl.innerHTML = FOKUS_PRIORITAS.map((fokus, i) => `
+// Cari input output/anggaran milik baris fokus ke-i.
+function inputBaris(i, jenis) {
+  return document.querySelector(`input[data-i="${i}"][data-f="${jenis}"]`)
+}
+
+// Render satu baris kosong per Fokus Prioritas.
+wadahBaris.innerHTML = FOKUS_PRIORITAS.map((fokus, i) => `
   <div class="grid grid-cols-12 gap-3 px-5 py-3 items-center border-b border-slate-100 last:border-0">
     <div class="col-span-6 text-sm text-slate-700">${escapeHtml(fokus)}</div>
     <div class="col-span-3">
@@ -43,13 +49,13 @@ rowsEl.innerHTML = FOKUS_PRIORITAS.map((fokus, i) => `
   </div>
 `).join('')
 
-rowsEl.querySelectorAll('input[data-f="anggaran"]').forEach(attachRupiah)
+wadahBaris.querySelectorAll('input[data-f="anggaran"]').forEach(attachRupiah)
 
-// Muat nama satker (A1) + target yang sudah ada
-async function init() {
-  appsScriptRequest({ action: 'info', sheet: satker }).then((res) => {
+// Muat nama satker (A1) + target tahun berjalan yang sudah ada → isi ke form.
+async function muatData() {
+  appsScriptRequest({ action: 'info', sheet: satker }).then(res => {
     if (res && res.ok && res.satker) {
-      satkerLabelEl.textContent = res.satker + (res.satker !== satker ? ` (${satker})` : '')
+      labelSatker.textContent = res.satker + (res.satker !== satker ? ` (${satker})` : '')
     }
   })
 
@@ -57,28 +63,27 @@ async function init() {
   const res = await appsScriptRequest({ action: 'list', sheet: satker })
   hideInputLoading()
   if (!res || !res.ok || !Array.isArray(res.rows)) {
-    // Gagal muat → jangan lanjut (risiko data ganda kalau ternyata sudah ada target)
+    // Gagal muat → jangan lanjut (risiko data ganda kalau ternyata target sudah ada).
     showResultDialog(false, ((res && res.error) || 'Gagal memuat data') + '\n\nBuka kembali halaman ini setelah jaringan stabil.', inputGoBack)
     return
   }
 
-  existingMap = {}
-  res.rows.forEach((r) => {
-    const fokus = String(r.values[COL.FOKUS - 1] || '').trim()
-    const tahun = Number(r.values[COL.TAHUN - 1])
+  fokusSudahAda = {}
+  res.rows.forEach(baris => {
+    const fokus = String(baris.values[COL.FOKUS - 1] || '').trim()
+    const tahun = Number(baris.values[COL.TAHUN - 1])
     if (tahun !== TAHUN_BERJALAN) return
     const i = FOKUS_PRIORITAS.indexOf(fokus)
     if (i === -1) return
-    existingMap[fokus] = { row: r.row }
-    const out = r.values[COL.TARGET_OUTPUT - 1]
-    const ang = r.values[COL.TARGET_ANGGARAN - 1]
-    const oEl = document.querySelector(`input[data-i="${i}"][data-f="output"]`)
-    const aEl = document.querySelector(`input[data-i="${i}"][data-f="anggaran"]`)
-    if (oEl && out !== '' && out != null) oEl.value = out
-    if (aEl && ang !== '' && ang != null) aEl.value = formatRupiah(ang)
+
+    fokusSudahAda[fokus] = true
+    const output   = baris.values[COL.TARGET_OUTPUT - 1]
+    const anggaran = baris.values[COL.TARGET_ANGGARAN - 1]
+    if (output !== '' && output != null) inputBaris(i, 'output').value = output
+    if (anggaran !== '' && anggaran != null) inputBaris(i, 'anggaran').value = formatRupiah(anggaran)
   })
 
-  if (Object.keys(existingMap).length) {
+  if (Object.keys(fokusSudahAda).length) {
     setStatus(`Target ${TAHUN_BERJALAN} sudah ada — perubahan akan memperbarui data.`, 'info')
     submitBtn.querySelector('span').textContent = 'Perbarui Target'
   }
@@ -87,16 +92,14 @@ async function init() {
 submitBtn.addEventListener('click', async () => {
   const tahun = Number(tahunSelect.value)
 
-  // Server (upsertTarget) yang memutuskan append/update secara atomik di dalam
-  // lock — aman walau beberapa user submit bersamaan (tidak ada baris ganda).
   const items = []
   FOKUS_PRIORITAS.forEach((fokus, i) => {
-    const output   = document.querySelector(`input[data-i="${i}"][data-f="output"]`).value.trim()
-    const anggaran = document.querySelector(`input[data-i="${i}"][data-f="anggaran"]`).value.trim()
+    const output   = inputBaris(i, 'output').value.trim()
+    const anggaran = inputBaris(i, 'anggaran').value.trim()
     if (output === '' && anggaran === '') return // lewati baris kosong
     items.push({
       no:       i + 1,
-      fokus:    fokus,
+      fokus,
       output:   output === '' ? '' : Number(output),
       anggaran: parseRupiah(anggaran),
     })
@@ -108,18 +111,18 @@ submitBtn.addEventListener('click', async () => {
   submitBtn.disabled = true
   showInputLoading('Menyimpan…')
 
-  const r = await appsScriptRequest({ action: 'upsertTarget', sheet: satker, tahun, items })
+  const res = await appsScriptRequest({ action: 'upsertTarget', sheet: satker, tahun, items })
   hideInputLoading()
 
-  if (r && r.ok) {
-    const parts = []
-    if (r.added) parts.push(`${r.added} baru`)
-    if (r.updated) parts.push(`${r.updated} diperbarui`)
-    showResultDialog(true, `Data target berhasil disimpan (${parts.join(', ') || 'tidak ada perubahan'}).`, inputGoBack)
+  if (res && res.ok) {
+    const ringkasan = []
+    if (res.added) ringkasan.push(`${res.added} baru`)
+    if (res.updated) ringkasan.push(`${res.updated} diperbarui`)
+    showResultDialog(true, `Data target berhasil disimpan (${ringkasan.join(', ') || 'tidak ada perubahan'}).`, inputGoBack)
   } else {
     submitBtn.disabled = false
-    showResultDialog(false, 'Gagal menyimpan: ' + ((r && r.error) || 'tidak diketahui'), null)
+    showResultDialog(false, 'Gagal menyimpan: ' + ((res && res.error) || 'tidak diketahui'), null)
   }
 })
 
-init()
+muatData()

@@ -1,46 +1,63 @@
+// Script halaman Pengawasan Terpadu / E-SAKIP (halaman "Segera Hadir").
+// Cukup tampilkan region user, muat sidebar, dan highlight menu aktif.
+
 const session = getSession()
 if (session) {
-  document.getElementById('userBadge').textContent = session.region === '*' ? 'Master' : session.region
+  document.getElementById('userBadge').textContent =
+    session.region === '*' ? 'Master' : session.region
 }
 
-const pageTitle = document.body.dataset.title || ''
-if (pageTitle) document.getElementById('pageTitle').textContent = pageTitle
+// Judul halaman diambil dari atribut data-title di <body>.
+const judul = document.body.dataset.title || ''
+if (judul) document.getElementById('pageTitle').textContent = judul
 
-;(() => {
-  const toggleBtn = document.getElementById('toggleBtn')
-  const sidebar   = document.getElementById('sidebar')
-  const main      = document.getElementById('main')
-  let open = true
-  toggleBtn.addEventListener('click', () => {
-    open = !open
-    sidebar.classList.toggle('-translate-x-full', !open)
-    main.classList.toggle('ml-64', open)
-    main.classList.toggle('ml-0', !open)
+// Tombol buka/tutup sidebar.
+function aktifkanToggleSidebar() {
+  const tombol  = document.getElementById('toggleBtn')
+  const sidebar = document.getElementById('sidebar')
+  const konten  = document.getElementById('main')
+  let terbuka = true
+  tombol.addEventListener('click', () => {
+    terbuka = !terbuka
+    sidebar.classList.toggle('-translate-x-full', !terbuka)
+    konten.classList.toggle('ml-64', terbuka)
+    konten.classList.toggle('ml-0', !terbuka)
   })
+}
 
-  fetch('sidebar.html').then(r => r.text()).then(html => {
-    sidebar.innerHTML = html
-
-    const all = sidebar.querySelectorAll('details')
-    all.forEach(det => {
-      det.addEventListener('toggle', () => {
-        if (det.open) all.forEach(other => { if (other !== det) other.open = false })
-      })
+// Accordion: hanya satu grup menu terbuka pada satu waktu.
+function aturAccordionSidebar(sidebar) {
+  const semuaGrup = sidebar.querySelectorAll('details')
+  semuaGrup.forEach(grup => {
+    grup.addEventListener('toggle', () => {
+      if (grup.open) semuaGrup.forEach(lain => { if (lain !== grup) lain.open = false })
     })
+  })
+}
 
-    const currentPage = window.location.pathname.split('/').pop()
-    for (const a of sidebar.querySelectorAll('a')) {
-      const href = a.getAttribute('href')
-      if (!href || href.charAt(0) === '#') continue // lewati link non-navigasi (mis. Survey)
-      try {
-        const u = new URL(a.href, window.location.href)
-        if (u.pathname.split('/').pop() === currentPage) {
-          a.classList.add('active')
-          const det = a.closest('details')
-          if (det) det.open = true
-          break
-        }
-      } catch (_) {}
-    }
-  }).catch(() => {})
-})()
+// Highlight link sidebar yang cocok dengan halaman yang sedang dibuka.
+function highlightMenuAktif(sidebar) {
+  const halamanSekarang = window.location.pathname.split('/').pop()
+  for (const link of sidebar.querySelectorAll('a')) {
+    const href = link.getAttribute('href')
+    if (!href || href.charAt(0) === '#') continue // lewati link non-navigasi (mis. Survey)
+    try {
+      const tujuan = new URL(link.href, window.location.href)
+      if (tujuan.pathname.split('/').pop() === halamanSekarang) {
+        link.classList.add('active')
+        const grup = link.closest('details')
+        if (grup) grup.open = true
+        break
+      }
+    } catch (_) {}
+  }
+}
+
+aktifkanToggleSidebar()
+fetch('sidebar.html').then(r => r.text()).then(html => {
+  const sidebar = document.getElementById('sidebar')
+  sidebar.innerHTML = html
+  filterSidebar()
+  aturAccordionSidebar(sidebar)
+  highlightMenuAktif(sidebar)
+}).catch(() => {})

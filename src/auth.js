@@ -15,22 +15,22 @@ async function authLogin(username, password) {
 
 function getSession() {
   try {
-    const s = JSON.parse(localStorage.getItem('simanda_session'));
-    if (!s) return null;
+    const sesi = JSON.parse(localStorage.getItem('simanda_session'));
+    if (!sesi) return null;
     // Wajib login tiap aplikasi dibuka: sesi hanya valid untuk run aplikasi yang sama.
     const runId = window.electronAPI && window.electronAPI.runId;
-    if (runId && s._runId !== runId) {
+    if (runId && sesi._runId !== runId) {
       localStorage.removeItem('simanda_session');
       return null;
     }
-    return s;
+    return sesi;
   } catch { return null; }
 }
 
 function requireAuth() {
-  const s = getSession();
-  if (!s) { window.location.replace('login.html'); return null; }
-  return s;
+  const sesi = getSession();
+  if (!sesi) { window.location.replace('login.html'); return null; }
+  return sesi;
 }
 
 function doLogout() {
@@ -87,27 +87,27 @@ function authLogout() {
 }
 
 function filterSidebar() {
-  const s = getSession();
-  if (!s || s.region === '*') return;
+  const sesi = getSession();
+  if (!sesi || sesi.region === '*') return; // master melihat semua
   // Menu khusus master sementara (mis. Pengawasan Terpadu & E-SAKIP, fiturnya
   // belum selesai). Hapus atribut data-master-only di sidebar.html bila sudah
   // siap ditampilkan ke user satker juga.
   document.querySelectorAll('#sidebar [data-master-only]').forEach(el => { el.style.display = 'none'; });
   // Filter berbasis region: hanya untuk daftar satker (link punya ?title=).
   // Menu fitur (tanpa ?title=) tidak ikut tersembunyi.
-  document.querySelectorAll('#sidebar details ul li').forEach(li => {
-    const a = li.querySelector('a[href]');
-    if (!a) return;
+  document.querySelectorAll('#sidebar details ul li').forEach(item => {
+    const link = item.querySelector('a[href]');
+    if (!link) return;
     try {
-      const u = new URL(a.href);
-      const title = u.searchParams.get('title');
-      if (title && title !== s.region) li.style.display = 'none';
+      const tujuan = new URL(link.href);
+      const title = tujuan.searchParams.get('title');
+      if (title && title !== sesi.region) item.style.display = 'none';
     } catch {}
   });
-  // Sembunyikan details daftar satker yang jadi kosong (semua li tersaring).
-  document.querySelectorAll('#sidebar details').forEach(det => {
-    const lis = det.querySelectorAll('ul li');
-    if (lis.length && ![...lis].some(li => li.style.display !== 'none')) det.style.display = 'none';
+  // Sembunyikan grup (details) daftar satker yang jadi kosong (semua item tersaring).
+  document.querySelectorAll('#sidebar details').forEach(grup => {
+    const daftar = grup.querySelectorAll('ul li');
+    if (daftar.length && ![...daftar].some(item => item.style.display !== 'none')) grup.style.display = 'none';
   });
 }
 

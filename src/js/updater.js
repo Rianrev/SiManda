@@ -1,39 +1,40 @@
 (function () {
   if (!window.electronAPI) return
 
-  // Tampilkan versi app di sidebar (sidebar dimuat async via fetch, jadi pakai observer)
-  function fillAppVersion() {
+  // Tampilkan versi app di sidebar. Sidebar dimuat async (fetch), jadi kalau elemennya
+  // belum ada, tunggu via MutationObserver sampai muncul.
+  function isiVersiApp() {
     const el = document.getElementById('appVersion')
     if (!el) return false
     if (window.electronAPI.appVersion) el.textContent = 'v' + window.electronAPI.appVersion
     return true
   }
-  if (!fillAppVersion()) {
-    const obs = new MutationObserver(() => { if (fillAppVersion()) obs.disconnect() })
-    obs.observe(document.documentElement, { childList: true, subtree: true })
+  if (!isiVersiApp()) {
+    const observer = new MutationObserver(() => { if (isiVersiApp()) observer.disconnect() })
+    observer.observe(document.documentElement, { childList: true, subtree: true })
   }
 
   function getBanner() { return document.getElementById('update-banner') }
 
   function showBanner() {
-    const b = getBanner()
-    if (!b) return
-    b.classList.remove('hidden')
-    b.classList.add('flex')
+    const banner = getBanner()
+    if (!banner) return
+    banner.classList.remove('hidden')
+    banner.classList.add('flex')
   }
 
   function hideBanner() {
-    const b = getBanner()
-    if (!b) return
-    b.classList.add('hidden')
-    b.classList.remove('flex')
+    const banner = getBanner()
+    if (!banner) return
+    banner.classList.add('hidden')
+    banner.classList.remove('flex')
   }
 
-  // Render the "downloading" banner (spinner + progress bar)
+  // Banner "sedang mengunduh" (spinner + progress bar).
   function renderDownloading(version, percent) {
-    const b = getBanner()
-    if (!b) return
-    b.innerHTML = `
+    const banner = getBanner()
+    if (!banner) return
+    banner.innerHTML = `
       <div class="flex items-start gap-3">
         <div class="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center shrink-0">
           <svg class="w-5 h-5 text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -54,11 +55,11 @@
     showBanner()
   }
 
-  // Render the "ready to install" banner
+  // Banner "siap dipasang" (tombol Restart & Install).
   function renderReady(version) {
-    const b = getBanner()
-    if (!b) return
-    b.innerHTML = `
+    const banner = getBanner()
+    if (!banner) return
+    banner.innerHTML = `
       <div class="flex items-start gap-3">
         <div class="w-9 h-9 rounded-xl bg-green-500/20 flex items-center justify-center shrink-0">
           <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,20 +86,20 @@
     document.getElementById('update-dismiss')?.addEventListener('click', hideBanner)
   }
 
-  function updateProgress(pct) {
+  function updateProgress(persen) {
     const bar  = document.getElementById('update-progress-bar')
-    const text = document.getElementById('update-progress-text')
-    if (bar)  bar.style.width  = pct + '%'
-    if (text) text.textContent = pct + '%'
+    const teks = document.getElementById('update-progress-text')
+    if (bar)  bar.style.width  = persen + '%'
+    if (teks) teks.textContent = persen + '%'
   }
 
-  // Live events
+  // Event langsung dari main process.
   window.electronAPI.onUpdateAvailable((version) => renderDownloading(version, 0))
   window.electronAPI.onUpdateProgress(updateProgress)
   window.electronAPI.onUpdateReady((version) => renderReady(version))
 
-  // On page load: query current status so a download that happened on a
-  // previous page (or a previous app run) still shows up here.
+  // Saat halaman dimuat: tanya status terkini, supaya unduhan yang terjadi di
+  // halaman/sesi sebelumnya tetap tampil di sini.
   async function syncStatus() {
     try {
       const state = await window.electronAPI.getUpdateStatus()
